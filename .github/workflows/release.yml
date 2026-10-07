@@ -155,7 +155,17 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - run: python -m pip install --upgrade pip && python -m pip install -e .
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      # requirements-dev.txt, not just `-e .`: `release artifacts` shells out to
+      # `python -m build`, and with only the package installed that module is
+      # missing. The wheel is then silently skipped -- `python -m build` exits
+      # non-zero rather than raising, so the build logs "FAILED" and carries on
+      # -- and the release dies later at verification with nothing pointing at
+      # the cause. The release must be cut with the same toolchain the gate
+      # approved.
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
 
       - name: Refuse to proceed on a blocked gate
         run: |

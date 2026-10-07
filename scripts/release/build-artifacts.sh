@@ -28,13 +28,38 @@ if [[ "${REQUIRE_GATE}" == "1" ]]; then
   fi
 fi
 
-printf '\n==> Building artefacts\n'
-"${PYTHON}" -m opencode_toolkit release artifacts --output "${PROJECT_ROOT}/dist" "$@"
+# The build and the re-verification must look at the same directory. Passing
+# --output and then verifying ${PROJECT_ROOT}/dist anyway means the "verified"
+# line describes a directory this run never wrote -- the check passes while
+# proving nothing about the artefacts about to be published.
+OUTPUT_DIR="${PROJECT_ROOT}/dist"
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output)
+      OUTPUT_DIR="$2"
+      ARGS+=("$1" "$2")
+      shift 2
+      ;;
+    --output=*)
+      OUTPUT_DIR="${1#--output=}"
+      ARGS+=("$1")
+      shift
+      ;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+printf '\n==> Building artefacts into %s\n' "${OUTPUT_DIR}"
+"${PYTHON}" -m opencode_toolkit release artifacts --output "${OUTPUT_DIR}" "${ARGS[@]+"${ARGS[@]}"}"
 STATUS=$?
 
 printf '\n==> Re-verifying the artefacts from disk\n'
 if [[ ${STATUS} -eq 0 ]]; then
-  "${PYTHON}" -m opencode_toolkit release verify-artifacts --output "${PROJECT_ROOT}/dist"
+  "${PYTHON}" -m opencode_toolkit release verify-artifacts --output "${OUTPUT_DIR}"
   STATUS=$?
 fi
 

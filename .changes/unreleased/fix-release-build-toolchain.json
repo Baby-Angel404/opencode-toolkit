@@ -1,0 +1,8 @@
+{
+  "id": "fix-release-build-toolchain",
+  "type": "fixed",
+  "area": "ci",
+  "description": "The release job installed only the package, so `python -m build` was missing. That module exits non-zero rather than raising, so the wheel was silently skipped and the run died later at artefact verification with nothing pointing at the cause. It now installs the same toolchain the gate approved. build-artifacts.sh also honoured --output for the build but verified the default directory, so its 'verified' line could describe artefacts the run never wrote.",
+  "breaking": false,
+  "issue": ""
+}
