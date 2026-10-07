@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from opencode_toolkit.cli.context import JSON, CliContext, emit_json
@@ -316,7 +317,7 @@ def example_plan(workspace: Path) -> dict[str, object]:
             title="Implement the change",
             role=Role.CODE_AUTHOR,
             depends_on=("plan",),
-            command=("python3", "-c", "print('implementing')"),
+            command=(sys.executable, "-c", "print('implementing')"),
             writes=(TaskWrite(path="example_output.txt", expected_sha256=None),),
             max_retries=1,
         ),
@@ -325,7 +326,7 @@ def example_plan(workspace: Path) -> dict[str, object]:
             title="Run the test suite",
             role=Role.TESTER,
             depends_on=("implement",),
-            command=("python3", "-c", "print('tests would run here')"),
+            command=(sys.executable, "-c", "print('tests would run here')"),
         ),
         Task(
             id="document",
@@ -340,7 +341,7 @@ def example_plan(workspace: Path) -> dict[str, object]:
             role=Role.SECURITY_REVIEWER,
             depends_on=("implement",),
             command=(
-                "python3",
+                sys.executable,
                 "-m",
                 "opencode_toolkit",
                 "security-audit",

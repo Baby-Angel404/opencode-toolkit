@@ -1,0 +1,8 @@
+{
+  "id": "fix-windows-test-failures",
+  "type": "fixed",
+  "area": "test",
+  "description": "Tests shelled out to a bare `python3`, which is not on PATH on Windows, and one of them killed itself with signal.SIGKILL, which does not exist there. Both now use the running interpreter, and the crash path reaches the retry policy through the branch the platform can actually produce. The generated example plan does the same, so it runs on the machine that wrote it.",
+  "breaking": false,
+  "issue": ""
+}

@@ -7,6 +7,7 @@ the real traceback rather than a subprocess exit code.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -559,7 +560,7 @@ def test_orchestrator_reports_a_failing_run(cli_invoke, workspace: Path) -> None
             "id": "boom",
             "title": "Fail",
             "role": "tester",
-            "command": ["python3", "-c", "raise SystemExit(2)"],
+            "command": [sys.executable, "-c", "raise SystemExit(2)"],
         }
     ]
     plan_file.write_text(json.dumps(plan), encoding="utf-8")
@@ -1088,3 +1089,22 @@ def test_test_command_dry_run(cli_invoke) -> None:
 
 def test_test_command_rejects_an_unknown_suite(cli_invoke) -> None:
     assert cli_invoke("test", "nonsense").code == exit_codes.USAGE
+
+
+def test_orchestrator_example_plan_uses_the_running_interpreter(
+    cli_invoke, workspace: Path
+) -> None:
+    """The generated plan must run on the machine that generated it.
+
+    The example shipped a literal `python3`, which is not on PATH on Windows, so
+    a user who ran it there got "command not found" for every task. `python3` is
+    also the wrong interpreter on any machine where it points somewhere else.
+    """
+    plan_file = workspace / "plan.json"
+    assert cli_invoke("orchestrator", "plan-example", "--output", str(plan_file)).code == 0
+    document = json.loads(plan_file.read_text())
+
+    with_commands = [task for task in document["tasks"] if task.get("command")]
+    assert with_commands, "the example plan is supposed to contain runnable tasks"
+    for task in with_commands:
+        assert task["command"][0] == sys.executable, task["id"]

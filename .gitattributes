@@ -1,0 +1,17 @@
+# Normalise line endings in the working tree, on every platform.
+#
+# Without this, a Windows checkout can carry CRLF where the committed bytes are
+# LF, which turns any check that hashes or measures a file into a coin flip that
+# depends on who ran it. The offline pack, the SBOM and the reproducibility gate
+# all hash file contents, so the bytes they see have to be the same everywhere.
+* text=auto eol=lf
+
+# These are binary by nature and must never be line-ending translated.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.whl binary
+*.zip binary
+*.gz binary

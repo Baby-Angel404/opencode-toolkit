@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 import zipfile
 from pathlib import Path
@@ -423,14 +424,14 @@ def _demo_plan(workspace: Path) -> Plan:
                 title="Author",
                 role=Role.CODE_AUTHOR,
                 depends_on=("plan",),
-                command=("python3", "-c", "print('authored')"),
+                command=(sys.executable, "-c", "print('authored')"),
             ),
             _task(
                 id="test",
                 title="Test",
                 role=Role.TESTER,
                 depends_on=("author",),
-                command=("python3", "-c", "raise SystemExit(1)"),
+                command=(sys.executable, "-c", "raise SystemExit(1)"),
             ),
             _task(id="review", title="Review", role=Role.SECURITY_REVIEWER, depends_on=("author",)),
             # Documentation depends on the tests passing, so a failing test must
@@ -481,7 +482,7 @@ def test_command_executor_runs_and_redacts(tmp_path: Path) -> None:
         id="a",
         role=Role.TESTER,
         command=(
-            "python3",
+            sys.executable,
             "-c",
             'print("api_key=supersecretvalue123456")',
         ),
@@ -496,7 +497,7 @@ def test_command_executor_enforces_a_timeout(tmp_path: Path) -> None:
     task = _task(
         id="a",
         role=Role.TESTER,
-        command=("python3", "-c", "import time; time.sleep(30)"),
+        command=(sys.executable, "-c", "import time; time.sleep(30)"),
         timeout_seconds=1,
     )
     outcome = CommandExecutor().execute(task, workspace=tmp_path, run_id="r")
@@ -518,7 +519,7 @@ def test_command_executor_confirms_a_declared_write_happened(tmp_path: Path) -> 
     task = _task(
         id="a",
         role=Role.CODE_AUTHOR,
-        command=("python3", "-c", "open('output.txt','w').write('new')"),
+        command=(sys.executable, "-c", "open('output.txt','w').write('new')"),
         writes=(TaskWrite(path="output.txt"),),
     )
     outcome = CommandExecutor().execute(task, workspace=tmp_path, run_id="r")
@@ -530,7 +531,7 @@ def test_command_executor_flags_a_declared_write_that_never_happened(tmp_path: P
     task = _task(
         id="a",
         role=Role.CODE_AUTHOR,
-        command=("python3", "-c", "print('did nothing')"),
+        command=(sys.executable, "-c", "print('did nothing')"),
         writes=(TaskWrite(path="never_created.txt"),),
     )
     outcome = CommandExecutor().execute(task, workspace=tmp_path, run_id="r")
@@ -546,12 +547,26 @@ def test_command_executor_flags_an_unchanged_declared_write(tmp_path: Path) -> N
     task = _task(
         id="a",
         role=Role.CODE_AUTHOR,
-        command=("python3", "-c", "print('ran but wrote nothing')"),
+        command=(sys.executable, "-c", "print('ran but wrote nothing')"),
         writes=(TaskWrite(path="output.txt", expected_sha256=sha256_file(target)),),
     )
     outcome = CommandExecutor().execute(task, workspace=tmp_path, run_id="r")
     assert not outcome.ok
     assert outcome.conflicts == ["output.txt"]
+
+
+def _crashing_command() -> tuple[str, ...]:
+    """Return a command that dies the way a crash does, on any platform.
+
+    ``os.kill(getpid(), SIGKILL)`` gives a *negative* returncode on POSIX, which
+    is exactly what the retry policy reads as a crash. Windows has no SIGKILL at
+    all -- the attribute does not even exist -- and it reports a positive exit
+    code when a process dies, so there the same retry decision is reached
+    through the other branch the policy accepts.
+    """
+    if os.name == "nt":
+        return (sys.executable, "-c", "raise SystemExit(124)")
+    return (sys.executable, "-c", "import os, signal; os.kill(os.getpid(), signal.SIGKILL)")
 
 
 def test_task_retries_a_retryable_failure(tmp_path: Path) -> None:
@@ -570,11 +585,7 @@ def test_task_retries_a_retryable_failure(tmp_path: Path) -> None:
                 id="a",
                 title="A",
                 role=Role.TESTER,
-                command=(
-                    "python3",
-                    "-c",
-                    "import os, signal; os.kill(os.getpid(), signal.SIGKILL)",
-                ),
+                command=_crashing_command(),
             ),
         ),
     )
@@ -600,7 +611,7 @@ def test_deterministic_failure_is_not_retried(tmp_path: Path) -> None:
                 id="a",
                 title="A",
                 role=Role.TESTER,
-                command=("python3", "-c", "import sys; sys.exit(1)"),
+                command=(sys.executable, "-c", "import sys; sys.exit(1)"),
             ),
         ),
     )
@@ -651,7 +662,7 @@ def test_checkpoint_restores_plan_state(tmp_path: Path) -> None:
                     id="b",
                     title="B",
                     role=Role.TESTER,
-                    command=("python3", "-c", "import sys; sys.exit(3)"),
+                    command=(sys.executable, "-c", "import sys; sys.exit(3)"),
                 ),
             ),
         ),
