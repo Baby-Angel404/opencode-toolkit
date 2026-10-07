@@ -1,0 +1,12 @@
+# Development tool chain, pinned to lower bounds that are known to work.
+#
+# The runtime has NO third-party dependencies -- that is a design decision, not
+# an accident, and it is what makes the offline pack redistributable without
+# third-party licence analysis. Everything below is used only for building,
+# testing and releasing.
+build>=1.2
+mypy>=1.10
+pip-audit>=2.7
+pytest>=8.0
+pytest-cov>=5.0
+ruff>=0.6

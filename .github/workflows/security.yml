@@ -1,0 +1,250 @@
+# Security scanning.
+#
+# Runs the toolkit's own audit, a dependency audit, a secret scan of the tree and
+# of the build output, CodeQL and workflow hygiene checks. No credential value is
+# ever written to a log: the secret scanner emits a correlation fingerprint only.
+#
+# Reusable: `release.yml` calls this file as a workflow so that the release gate
+# genuinely waits for these stages. A job cannot depend on a job in another
+# workflow file, so cross-file ordering has to be expressed by calling it.
+
+name: Security
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Weekly, so a newly published advisory is noticed without a push.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  audit:
+    name: Static security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
+
+      - name: Self audit as SARIF
+        # `|| true` because the CLI exits 1 when findings reach the threshold;
+        # the gate below decides whether that is a failure, and the SARIF is
+        # uploaded either way so code scanning sees the results.
+        run: python -m opencode_toolkit security-audit src --strict --format sarif > security-audit.sarif || true
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security-audit.sarif
+          category: opencode-toolkit-python
+
+      - name: Audit the whole tree
+        run: python -m opencode_toolkit security-audit . --strict
+
+      - name: Assert no critical or high finding survived
+        run: |
+          python -m opencode_toolkit --format json security-audit . --strict > audit.json || true
+          python - <<'PY'
+          import json
+          import sys
+
+          document = json.load(open("audit.json"))
+          counts = document["summary"]["by_severity"]
+          print("findings by severity:", json.dumps(counts))
+          blocking = counts.get("critical", 0) + counts.get("high", 0)
+          if blocking:
+              for finding in document["findings"]:
+                  if finding["severity"] in {"critical", "high"}:
+                      print(
+                          f"  {finding['severity']} {finding['rule_id']} "
+                          f"{finding['file']}:{finding['line']}"
+                      )
+              sys.exit(1)
+          PY
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install --upgrade pip && python -m pip install pip-audit
+
+      - name: Audit the development tool chain
+        run: |
+          python -m pip_audit --requirement requirements-dev.txt --progress-spinner off \
+            || { echo "::error::a known vulnerability was found in the tool chain"; exit 1; }
+
+      - name: Confirm the runtime closure is empty
+        run: |
+          python -m opencode_toolkit --format json release sbom --summary > summary.json || true
+          python - <<'PY'
+          import json
+
+          summary = json.load(open("summary.json"))
+          runtime = summary["runtime_dependencies"]
+          print(f"runtime dependency closure: {runtime} package(s)")
+          if runtime:
+              print(
+                  "::warning::the runtime now has third-party dependencies; the "
+                  "offline pack must re-check redistribution licensing"
+              )
+          PY
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: Scan the working tree
+        run: python scripts/security/secret-scan.py --root .
+
+      - name: Build and scan exactly what would be published
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --outdir dist
+          python -m opencode_toolkit release artifacts --output dist --no-wheel || true
+          python scripts/security/secret-scan.py --root . --staging dist
+
+      - name: Scan git history
+        # History matters: a credential deleted from the working tree is still
+        # exposed in every clone. Only fingerprints are printed.
+        run: |
+          git log --all -p --no-color > /tmp/opencode-history.patch
+          python - <<'PY'
+          import re
+          import sys
+
+          from opencode_toolkit.core.redact import fingerprint, is_allowlisted
+          from opencode_toolkit.publishing.artifacts import SECRET_PATTERNS
+
+          patterns = [(re.compile(pattern), kind) for pattern, kind in SECRET_PATTERNS]
+          hits = 0
+          with open("/tmp/opencode-history.patch", encoding="utf-8", errors="replace") as handle:
+              for number, line in enumerate(handle, 1):
+                  if line.startswith(("+++", "---")):
+                      continue
+                  for pattern, kind in patterns:
+                      for match in pattern.finditer(line):
+                          if is_allowlisted(match.group(0)):
+                              continue
+                          hits += 1
+                          print(
+                              f"historical {kind} at patch line {number}: "
+                              f"sha256 {fingerprint(match.group(0))}"
+                          )
+          print(f"{hits} candidate(s) in history (values withheld)")
+          raise SystemExit(1 if hits else 0)
+          PY
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-extended
+      - name: Analyse
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
+
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+
+  workflow-hygiene:
+    name: Workflow hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actions are pinned and no credential is hard-coded
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          # Anchored at the start of the line: an action reference is a YAML key,
+          # so a regex literal containing the word "uses" must not match.
+          floating = re.compile(r"^\s*(?:-\s*)?uses:\s*\S+@(?![0-9a-f]{40}|v?\d)")
+          secret_shape = re.compile(
+              r"(hf_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16})"
+          )
+          problems = []
+          for path in sorted(pathlib.Path(".github").rglob("*.yml")):
+              for number, line in enumerate(path.read_text().splitlines(), 1):
+                  if floating.search(line):
+                      problems.append(f"{path}:{number}: unpinned action: {line.strip()}")
+                  if secret_shape.search(line):
+                      problems.append(f"{path}:{number}: possible hard-coded credential")
+          for problem in problems:
+              print(f"::error::{problem}")
+          sys.exit(1 if problems else 0)
+          PY
+      - name: Every workflow declares permissions
+        run: |
+          python - <<'PY'
+          import pathlib
+          import sys
+
+          missing = [
+              path.name
+              for path in sorted(pathlib.Path(".github/workflows").glob("*.yml"))
+              if "permissions:" not in path.read_text()
+          ]
+          for name in missing:
+              print(f"::error::{name}: no permissions block")
+          sys.exit(1 if missing else 0)
+          PY

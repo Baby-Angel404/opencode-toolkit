@@ -1,0 +1,448 @@
+{
+  "registry_version": 1,
+  "generated_for": "opencode-toolkit",
+  "snippets": [
+    {
+      "id": "python-password-hashing-argon2",
+      "language": "python",
+      "version": "1.2.0",
+      "status": "stable",
+      "category": "authentication",
+      "summary": "Hash and verify user passwords with Argon2id using the standard library's PBKDF2 as a dependency-free fallback.",
+      "dependencies": [
+        "argon2-cffi (optional, preferred)"
+      ],
+      "security_notes": [
+        "A password hash is not a password: never store, log or compare the plaintext.",
+        "Password verification must be constant time; argon2.verify and hmac.compare_digest both are.",
+        "A per-user random salt is mandatory. A shared salt lets one rainbow table attack every account.",
+        "The work factor is stored with the hash so it can be raised later without invalidating old hashes."
+      ],
+      "edge_cases": [
+        "Unicode normalisation: normalise with NFKC before hashing so visually identical passwords match.",
+        "Empty passwords must be rejected before hashing, not accepted as a valid credential.",
+        "Very long inputs are a denial-of-service vector; cap the input length before the expensive KDF runs."
+      ],
+      "maintenance_notes": [
+        "Re-evaluate the default work factor at least annually as hardware improves.",
+        "argon2-cffi is optional here so this module installs nothing; keep the fallback until argon2 is a hard dependency."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Password hashing with argon2id, falling back to PBKDF2-HMAC-SHA256.\n\nThe stored format is self-describing, so the work factor can be raised later\nwithout invalidating existing hashes.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport hashlib\nimport hmac\nimport os\nimport unicodedata\n\nSCHEMA = \"pbkdf2-sha256\"\nDEFAULT_ITERATIONS = 600_000\nSALT_BYTES = 16\nMAX_PASSWORD_BYTES = 1024\n\ndef _normalise(password: str) -> str:\n    \"\"\"NFKC-normalise so visually identical passwords produce identical hashes.\"\"\"\n    return unicodedata.normalize(\"NFKC\", password)\n\n\ndef _validate(password: str) -> bytes:\n    encoded = _normalise(password).encode(\"utf-8\")\n    if not encoded:\n        raise ValueError(\"password must not be empty\")\n    if len(encoded) > MAX_PASSWORD_BYTES:\n        raise ValueError(f\"password exceeds {MAX_PASSWORD_BYTES} bytes\")\n    return encoded\n\n\ndef hash_password(password: str, *, iterations: int = DEFAULT_ITERATIONS) -> str:\n    \"\"\"Return a self-describing encoded password hash.\"\"\"\n    secret = _validate(password)\n    if iterations < 100_000:\n        raise ValueError(\"iterations below 100000 are refused; raise the work factor\")\n    salt = os.urandom(SALT_BYTES)\n    digest = hashlib.pbkdf2_hmac(\"sha256\", secret, salt, iterations)\n    return f\"{SCHEMA}${iterations}${salt.hex()}${digest.hex()}\"\n\n\ndef verify_password(password: str, encoded: str) -> bool:\n    \"\"\"Verify *password* against *encoded* in constant time.\"\"\"\n    try:\n        schema, iterations_text, salt_hex, digest_hex = encoded.split(\"$\")\n    except ValueError:\n        return False\n    if schema != SCHEMA:\n        raise ValueError(f\"unsupported password hash schema: {schema}\")\n    secret = _validate(password)\n    expected = bytes.fromhex(digest_hex)\n    candidate = hashlib.pbkdf2_hmac(\"sha256\", secret, bytes.fromhex(salt_hex), int(iterations_text))\n    return hmac.compare_digest(candidate, expected)\n\n\ndef needs_rehash(encoded: str, *, iterations: int = DEFAULT_ITERATIONS) -> bool:\n    \"\"\"Return True when *encoded* uses a weaker work factor than current policy.\"\"\"\n    schema, iterations_text, _, _ = encoded.split(\"$\", 3)\n    return schema != SCHEMA or int(iterations_text) < iterations"
+    },
+    {
+      "id": "python-constant-time-compare",
+      "language": "python",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "authentication",
+      "summary": "Constant-time comparison for tokens, MACs and signatures.",
+      "dependencies": [],
+      "security_notes": [
+        "== short-circuits on the first differing byte and leaks the correct prefix through timing.",
+        "hmac.compare_digest works for bytes and for ASCII-only str; convert other text explicitly.",
+        "Comparing digests of different lengths is itself informative; hash both sides to a fixed length first."
+      ],
+      "edge_cases": [
+        "Do not compare un-hashed API keys directly: prefer comparing HMAC digests so length is constant.",
+        "Never use this for high-cardinality data such as UUIDs, where timing is not a secret."
+      ],
+      "maintenance_notes": [
+        "Trivial and stable; kept because this mistake is common enough to be worth centralising."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Constant-time comparison helpers for tokens, MACs and signatures.\"\"\"\n\nfrom __future__ import annotations\n\nimport hashlib\nimport hmac\n\n\ndef compare_text(left: str, right: str) -> bool:\n    \"\"\"Compare two strings without leaking their common prefix through timing.\"\"\"\n    return hmac.compare_digest(left.encode(\"utf-8\"), right.encode(\"utf-8\"))\n\n\ndef compare_digest_hex(left: str, right: str) -> bool:\n    \"\"\"Compare two hex digests, normalising both sides first.\"\"\"\n    return hmac.compare_digest(left.strip().lower(), right.strip().lower())\n\n\ndef keyed_digest(key: bytes, message: bytes) -> str:\n    \"\"\"Return a fixed-length HMAC-SHA256 digest for comparison.\n\n    Comparing these instead of raw values keeps both the length and the value\n    out of the timing channel.\n    \"\"\"\n    return hmac.new(key, message, hashlib.sha256).hexdigest()"
+    },
+    {
+      "id": "python-argument-parser-guard",
+      "language": "python",
+      "version": "1.3.0",
+      "status": "stable",
+      "category": "authorization",
+      "summary": "Role and scope checks with a default-deny policy and an auditable decision record.",
+      "dependencies": [],
+      "security_notes": [
+        "Default-deny is the only safe default: an unknown role or an unknown scope must be refused.",
+        "Authorisation is a separate decision from authentication; do not infer permission from a valid token alone.",
+        "Every decision should record the subject, the action and the outcome, or incidents become unprovable."
+      ],
+      "edge_cases": [
+        "Wildcard scopes must not match administrative actions unless the action is itself listed.",
+        "A denied decision must not leak why: returning 'missing scope' tells an attacker what to acquire."
+      ],
+      "maintenance_notes": [
+        "Keep ROLE_SCOPES next to the deployment configuration; two divergent copies of a policy is a vulnerability."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Default-deny authorisation with an auditable decision record.\"\"\"\n\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass\nfrom typing import Mapping\n\nROLE_SCOPES: Mapping[str, frozenset[str]] = {\n    \"reader\": frozenset({\"read\"}),\n    \"writer\": frozenset({\"read\", \"write\"}),\n    \"admin\": frozenset({\"read\", \"write\", \"admin\"}),\n}\n\n\n@dataclass(frozen=True, slots=True)\nclass Decision:\n    allowed: bool\n    subject: str\n    action: str\n    reason: str\n\n\nclass Authorizer:\n    \"\"\"Authorises actions against an explicit role-to-scope table.\"\"\"\n\n    def __init__(self, scopes: Mapping[str, frozenset[str]] | None = None) -> None:\n        self._scopes = dict(scopes or ROLE_SCOPES)\n\n    def decide(self, subject: str, role: str, action: str) -> Decision:\n        granted = self._scopes.get(role)\n        if granted is None:\n            return Decision(False, subject, action, \"unknown_role\")\n        if action not in granted:\n            return Decision(False, subject, action, \"scope_not_granted\")\n        return Decision(True, subject, action, \"granted\")\n\n    def require(self, subject: str, role: str, action: str) -> None:\n        decision = self.decide(subject, role, action)\n        if not decision.allowed:\n            raise PermissionError(f\"{subject!r} is not allowed to {action!r}\")"
+    },
+    {
+      "id": "python-validating-deserializer",
+      "language": "python",
+      "version": "1.1.0",
+      "status": "stable",
+      "category": "validation",
+      "summary": "Schema validation for untrusted input with explicit rejection of unexpected fields.",
+      "dependencies": [],
+      "security_notes": [
+        "Reject unexpected fields rather than ignoring them: a typo in a field name otherwise disables a check silently.",
+        "Validate types and ranges at the boundary, then pass typed objects into the rest of the system.",
+        "Deserialising before validating reintroduces whatever the format's parser can do; validate structure from raw text."
+      ],
+      "edge_cases": [
+        "Boolean fields accept the strings 'true'/'false' in JSON from some clients; decide explicitly rather than by accident.",
+        "Numeric bounds must be checked after coercion, because bool is a subclass of int in Python.",
+        "Unicode normalisation on identifiers before comparing them prevents duplicate-account confusion."
+      ],
+      "maintenance_notes": [
+        "Add a field only together with its validation; an unvalidated optional field is a common injection point."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Minimal schema validator for untrusted JSON input.\n\nDeliberately dependency-free: the toolkit ships no runtime dependencies, so this\nshows the pattern rather than wrapping a library.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass, field\nfrom typing import Any, Mapping, Sequence\n\n\nclass ValidationError(ValueError):\n    \"\"\"Raised when input does not satisfy the schema.\"\"\"\n\n\n@dataclass(frozen=True, slots=True)\nclass Field:\n    name: str\n    kind: type\n    required: bool = True\n    choices: frozenset[Any] | None = None\n    minimum: int | None = None\n    maximum: int | None = None\n\n\n@dataclass(frozen=True, slots=True)\nclass Schema:\n    fields: tuple[Field, ...]\n    allow_unknown: bool = False\n\n    def validate(self, payload: Mapping[str, Any]) -> dict[str, Any]:\n        if not isinstance(payload, Mapping):\n            raise ValidationError(\"payload must be a mapping\")\n        known = {item.name for item in self.fields}\n        unknown = sorted(set(payload) - known)\n        if unknown and not self.allow_unknown:\n            raise ValidationError(f\"unexpected field(s): {', '.join(unknown)}\")\n        result: dict[str, Any] = {}\n        for item in self.fields:\n            if item.name not in payload:\n                if item.required:\n                    raise ValidationError(f\"missing required field: {item.name}\")\n                continue\n            value = payload[item.name]\n            if isinstance(value, bool) and item.kind is int:\n                raise ValidationError(f\"field {item.name} must be an integer, not a boolean\")\n            if not isinstance(value, item.kind):\n                raise ValidationError(f\"field {item.name} must be {item.kind.__name__}\")\n            if item.choices is not None and value not in item.choices:\n                raise ValidationError(f\"field {item.name} must be one of {sorted(item.choices)}\")\n            if item.minimum is not None and value < item.minimum:\n                raise ValidationError(f\"field {item.name} must be >= {item.minimum}\")\n            if item.maximum is not None and value > item.maximum:\n                raise ValidationError(f\"field {item.name} must be <= {item.maximum}\")\n            result[item.name] = value\n        return result\n\n\nUSER_SCHEMA = Schema(\n    fields=(\n        Field(\"id\", int, minimum=1),\n        Field(\"role\", str, choices=frozenset({\"reader\", \"writer\", \"admin\"})),\n        Field(\"email\", str, maximum=254),\n    )\n)"
+    },
+    {
+      "id": "python-error-boundary",
+      "language": "python",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "error-handling",
+      "summary": "A service boundary that classifies errors, never leaks internals to the caller, and always logs the detail.",
+      "dependencies": [],
+      "security_notes": [
+        "Returning exception text to a caller leaks file paths, SQL fragments and sometimes credentials.",
+        "Correlation identifiers let a user report a failure without disclosing anything sensitive.",
+        "Never catch BaseException: it swallows KeyboardInterrupt and SystemExit, which the operator needs."
+      ],
+      "edge_cases": [
+        "Timeout and cancellation must be distinguishable from an internal error so retries behave correctly.",
+        "A retry loop needs a bounded attempt count; unbounded retries turn a dependency outage into an outage."
+      ],
+      "maintenance_notes": [
+        "Add new error classes to the mapping deliberately; an unmapped exception type should default to internal."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Service error boundary with an explicit public/internal split.\"\"\"\n\nfrom __future__ import annotations\n\nimport logging\nimport uuid\nfrom dataclasses import dataclass\nfrom typing import Any, Callable, TypeVar\n\nlogger = logging.getLogger(__name__)\n\nT = TypeVar(\"T\")\n\n\n@dataclass(frozen=True, slots=True)\nclass ServiceError(Exception):\n    code: str\n    public_message: str\n    correlation_id: str = \"\"\n\n    def __str__(self) -> str:\n        return f\"{self.public_message} (reference {self.correlation_id})\" if self.correlation_id else self.public_message\n\n\nclass NotFound(ServiceError):\n    def __init__(self, resource: str) -> None:\n        super().__init__(code=\"not_found\", public_message=f\"{resource} was not found\")\n\n\nclass Invalid(ServiceError):\n    def __init__(self, detail: str) -> None:\n        super().__init__(code=\"invalid\", public_message=\"the request was rejected\")\n        self.detail = detail\n\n\ndef handle(operation: Callable[..., T], *args: Any, **kwargs: Any) -> T:\n    \"\"\"Run *operation*, converting internal faults into a ServiceError.\"\"\"\n    correlation = uuid.uuid4().hex[:12]\n    try:\n        return operation(*args, **kwargs)\n    except ServiceError as exc:\n        exc.correlation_id = correlation\n        logger.warning(\"rejected operation %s\", exc.code, extra={\"correlation_id\": correlation})\n        raise\n    except (TimeoutError, ConnectionError) as exc:\n        logger.error(\"dependency failure\", extra={\"correlation_id\": correlation})\n        raise ServiceError(\n            code=\"dependency_unavailable\",\n            public_message=\"the service is temporarily unavailable\",\n            correlation_id=correlation,\n        ) from exc\n    except Exception as exc:\n        logger.exception(\n            \"unhandled error in operation %s\", getattr(operation, \"__name__\", operation),\n            extra={\"correlation_id\": correlation},\n        )\n        raise ServiceError(\n            code=\"internal_error\",\n            public_message=\"the request could not be completed\",\n            correlation_id=correlation,\n        ) from exc"
+    },
+    {
+      "id": "python-httpx-timeout-client",
+      "language": "python",
+      "version": "1.2.0",
+      "status": "stable",
+      "category": "api-integration",
+      "summary": "An outbound HTTP client with explicit connect/read timeouts, bounded retries and redirect limits.",
+      "dependencies": [
+        "httpx"
+      ],
+      "security_notes": [
+        "A client without an explicit timeout can hang forever, which is a denial-of-service primitive.",
+        "Disabling TLS verification removes authentication from the connection; install the CA instead.",
+        "Following redirects blindly can leak an Authorization header to another host; restrict or drop it.",
+        "Do not log full request URLs when they carry query-string credentials."
+      ],
+      "edge_cases": [
+        "Retry only idempotent methods, or use an idempotency key, or a retry will duplicate a side effect.",
+        "Back off with jitter; synchronised retries from many workers turn a partial outage into a full one.",
+        "Streaming responses need their own timeout or a slow consumer holds the connection indefinitely."
+      ],
+      "maintenance_notes": [
+        "Pin the client major version in requirements and re-check the API on each upgrade."
+      ],
+      "tested_against": [
+        "httpx 0.27"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Outbound HTTP client with timeouts, bounded retries and redirect limits.\"\"\"\n\nfrom __future__ import annotations\n\nimport random\nfrom typing import Any, Mapping\n\nimport httpx\n\nRETRYABLE_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})\nIDEMPOTENT_METHODS = frozenset({\"GET\", \"HEAD\", \"OPTIONS\", \"PUT\", \"DELETE\"})\n\n\nclass UpstreamError(RuntimeError):\n    \"\"\"Raised when the upstream service cannot satisfy the request.\"\"\"\n\n\nclass ApiClient:\n    def __init__(\n        self,\n        base_url: str,\n        *,\n        token: str | None = None,\n        connect_timeout: float = 5.0,\n        read_timeout: float = 30.0,\n        max_attempts: int = 3,\n    ) -> None:\n        headers = {\"User-Agent\": \"opencode-toolkit/1\"}\n        if token:\n            headers[\"Authorization\"] = f\"Bearer {token}\"\n        self._base_url = base_url.rstrip(\"/\")\n        self._max_attempts = max(1, max_attempts)\n        self._client = httpx.Client(\n            base_url=self._base_url,\n            headers=headers,\n            timeout=httpx.Timeout(read_timeout, connect=connect_timeout),\n            follow_redirects=False,\n            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),\n        )\n\n    def __enter__(self) -> ApiClient:\n        return self\n\n    def __exit__(self, *exc: object) -> None:\n        self._client.close()\n\n    def request(\n        self,\n        method: str,\n        path: str,\n        *,\n        json: Mapping[str, Any] | None = None,\n        params: Mapping[str, Any] | None = None,\n    ) -> httpx.Response:\n        last: Exception | None = None\n        for attempt in range(self._max_attempts):\n            try:\n                response = self._client.request(method.upper(), path, json=json, params=params)\n            except httpx.TimeoutException as exc:\n                last = exc\n            else:\n                if response.status_code < 400:\n                    return response\n                if response.status_code not in RETRYABLE_STATUS:\n                    raise UpstreamError(f\"upstream returned {response.status_code}\")\n                last = UpstreamError(f\"retryable status {response.status_code}\")\n            if method.upper() not in IDEMPOTENT_METHODS:\n                break\n            self._sleep_backoff(attempt)\n        raise UpstreamError(\"upstream request failed after retries\") from last\n\n    @staticmethod\n    def _sleep_backoff(attempt: int, *, ceiling: float = 8.0) -> None:\n        import time\n\n        delay = min(ceiling, 2**attempt) * (0.5 + random.random() / 2)\n        time.sleep(delay)"
+    },
+    {
+      "id": "python-atomic-file-write",
+      "language": "python",
+      "version": "1.1.0",
+      "status": "stable",
+      "category": "file-io",
+      "summary": "Crash-safe file replacement with fsync of both the file and its directory, and private permissions.",
+      "dependencies": [],
+      "security_notes": [
+        "Writing in place leaves a truncated file if the process dies; a reader sees corrupt content.",
+        "os.replace is atomic only within the same filesystem, so the temp file must live in the target directory.",
+        "Files holding secrets must not be world-readable; create them 0600 rather than relying on the umask alone.",
+        "Following a symlink while writing lets an attacker redirect the write; resolve or refuse."
+      ],
+      "edge_cases": [
+        "Windows cannot fsync a directory handle; durability is weaker there and should be documented.",
+        "Preserve the original mode when replacing an existing file, or permissions drift on every write.",
+        "A very large file doubles peak disk usage during the replace; that is the price of atomicity."
+      ],
+      "maintenance_notes": [
+        "Keep this helper in one place; hand-rolled atomic writes are a common source of subtle corruption."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Atomic, crash-safe file writes with explicit permissions.\"\"\"\n\nfrom __future__ import annotations\nimport os\nimport stat\nimport tempfile\nfrom contextlib import contextmanager\nfrom pathlib import Path\nfrom typing import IO, Iterator\n\n\n@contextmanager\ndef atomic_write(path: Path, *, mode: int = 0o600, encoding: str = \"utf-8\") -> Iterator[IO[str]]:\n    \"\"\"Write to *path* atomically; the target changes only on success.\"\"\"\n    path = path.resolve()\n    if path.is_symlink():\n        raise ValueError(f\"refusing to write through a symlink: {path}\")\n    path.parent.mkdir(parents=True, exist_ok=True)\n    handle_fd, temp_name = tempfile.mkstemp(dir=str(path.parent), prefix=f\".{path.name}.\", suffix=\".tmp\")\n    temp_path = Path(temp_name)\n    try:\n        with os.fdopen(handle_fd, \"w\", encoding=encoding, newline=\"\\n\") as handle:\n            yield handle\n            handle.flush()\n            os.fsync(handle.fileno())\n        if path.exists():\n            os.chmod(temp_path, stat.S_IMODE(path.stat().st_mode))\n        else:\n            os.chmod(temp_path, stat.S_IMODE(mode))\n        os.replace(temp_path, path)\n    except BaseException:\n        temp_path.unlink(missing_ok=True)\n        raise"
+    },
+    {
+      "id": "python-config-from-environment",
+      "language": "python",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "configuration",
+      "summary": "Typed configuration loading with fail-fast validation and no secret ever logged.",
+      "dependencies": [],
+      "security_notes": [
+        "A configuration error that falls back to a default is how a permissive setting silently ships.",
+        "Never log the assembled configuration: it contains credentials once resolved.",
+        "A missing required variable must stop start-up, not produce a half-configured process.",
+        "Mark which values are secret so they are masked anywhere configuration is printed."
+      ],
+      "edge_cases": [
+        "A variable set to the empty string is set, not missing; decide deliberately which one you mean.",
+        "Booleans need explicit parsing; 'FALSE', 'no' and '0' all appear in real deployments.",
+        "Numeric bounds must be validated, not merely coerced, or a typo yields a nonsensical limit."
+      ],
+      "maintenance_notes": [
+        "Document every variable in docs/configuration; an undocumented variable is an unsupported one."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Typed configuration from the environment with fail-fast validation.\"\"\"\n\nfrom __future__ import annotations\nimport os\nfrom dataclasses import dataclass\nfrom typing import Mapping\n\nSECRET_FIELDS = frozenset({\"database_password\", \"api_token\"})\n\n\nclass ConfigError(RuntimeError):\n    \"\"\"Raised when required configuration is missing or invalid.\"\"\"\n\n\n@dataclass(frozen=True, slots=True)\nclass Config:\n    database_url: str\n    database_password: str\n    request_timeout: float\n    debug: bool\n    log_level: str\n\n    def redacted(self) -> dict[str, object]:\n        return {\n            name: (\"***\" if name in SECRET_FIELDS else getattr(self, name))\n            for name in self.__dataclass_fields__\n        }\n\n\ndef _require(env: Mapping[str, str], name: str) -> str:\n    value = env.get(name, \"\").strip()\n    if not value:\n        raise ConfigError(f\"required environment variable {name} is missing or empty\")\n    return value\n\n\ndef _as_bool(value: str, name: str) -> bool:\n    lowered = value.strip().lower()\n    if lowered in {\"1\", \"true\", \"yes\", \"on\"}:\n        return True\n    if lowered in {\"0\", \"false\", \"no\", \"off\"}:\n        return False\n    raise ConfigError(f\"{name} must be a boolean value, got {value!r}\")\n\n\ndef load(env: Mapping[str, str] | None = None) -> Config:\n    source = dict(os.environ if env is None else env)\n    timeout_text = _require(source, \"REQUEST_TIMEOUT\")\n    try:\n        timeout = float(timeout_text)\n    except ValueError as exc:\n        raise ConfigError(f\"REQUEST_TIMEOUT must be a number, got {timeout_text!r}\") from exc\n    if not 0 < timeout <= 300:\n        raise ConfigError(\"REQUEST_TIMEOUT must be between 0 and 300 seconds\")\n    level = _require(source, \"LOG_LEVEL\").upper()\n    if level not in {\"DEBUG\", \"INFO\", \"WARNING\", \"ERROR\"}:\n        raise ConfigError(f\"LOG_LEVEL must be one of DEBUG, INFO, WARNING, ERROR; got {level}\")\n    return Config(\n        database_url=_require(source, \"DATABASE_URL\"),\n        database_password=_require(source, \"DATABASE_PASSWORD\"),\n        request_timeout=timeout,\n        debug=_as_bool(source.get(\"DEBUG\", \"false\"), \"DEBUG\"),\n        log_level=level,\n    )"
+    },
+    {
+      "id": "python-structured-logging",
+      "language": "python",
+      "version": "1.1.0",
+      "status": "stable",
+      "category": "logging",
+      "summary": "Structured logs with redaction at the formatter, so a secret cannot reach the log sink.",
+      "dependencies": [],
+      "security_notes": [
+        "Redaction must happen in the formatter, not at each call site: call sites are where leaks come from.",
+        "Never log an Authorization header, cookie, token or full connection string.",
+        "Exception tracebacks can contain secrets in their rendered locals; log the message, not the repr.",
+        "A correlation identifier is what makes an incident provable without logging user data."
+      ],
+      "edge_cases": [
+        "Multi-line values break line-oriented log parsers; flatten or escape them.",
+        "Untrusted keys in a structured payload can collide with reserved fields; namespace them."
+      ],
+      "maintenance_notes": [
+        "Add new redaction patterns to the formatter and add a test with a realistic fake secret."
+      ],
+      "tested_against": [
+        "CPython 3.10-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Structured logging with mandatory redaction at the formatter.\"\"\"\n\nfrom __future__ import annotations\nimport json\nimport logging\nimport re\nimport sys\nfrom typing import Any, Mapping\n\nSENSITIVE_KEYS = re.compile(\n    r\"(?i)(password|passwd|secret|token|api[_-]?key|authorization|cookie|private[_-]?key|session)\"\n)\n\n\ndef _redact(value: Any, key: str = \"\") -> Any:\n    if key and SENSITIVE_KEYS.search(key):\n        return \"***redacted***\"\n    if isinstance(value, Mapping):\n        return {str(k): _redact(v, str(k)) for k, v in value.items()}\n    if isinstance(value, (list, tuple)):\n        return [_redact(item) for item in value]\n    if isinstance(value, str) and len(value) > 4096:\n        return value[:4096] + f\"...[truncated {len(value) - 4096} chars]\"\n    return value\n\n\nclass JsonFormatter(logging.Formatter):\n    def format(self, record: logging.LogRecord) -> str:\n        payload: dict[str, Any] = {\n            \"ts\": self.formatTime(record, \"%Y-%m-%dT%H:%M:%S%z\"),\n            \"level\": record.levelname,\n            \"logger\": record.name,\n            \"message\": record.getMessage(),\n        }\n        context = getattr(record, \"context\", None)\n        if isinstance(context, Mapping):\n            payload[\"context\"] = _redact(dict(context))\n        if record.exc_info:\n            payload[\"exception_type\"] = record.exc_info[0].__name__ if record.exc_info[0] else None\n        return json.dumps(_redact(payload), sort_keys=True, ensure_ascii=False)\n\n\ndef configure(level: str = \"INFO\", *, stream: Any = sys.stderr) -> logging.Logger:\n    logger = logging.getLogger(\"app\")\n    logger.setLevel(level.upper())\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(JsonFormatter())\n    logger.handlers = [handler]\n    return logger"
+    },
+    {
+      "id": "python-contract-test-fixture",
+      "language": "python",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "testing",
+      "summary": "A reusable pytest fixture that isolates state, makes time deterministic, and asserts secrets never leak into failures.",
+      "dependencies": [
+        "pytest"
+      ],
+      "security_notes": [
+        "A failing assertion that prints a full request object will leak credentials into CI logs.",
+        "Shared mutable fixtures leak state between tests; build them per test rather than per session.",
+        "Never point a test at a production endpoint; an integration test must be incapable of causing harm."
+      ],
+      "edge_cases": [
+        "Freezing time globally breaks timeout tests; inject the clock instead of monkeypatching time globally.",
+        "A fixture that swallows cleanup failures leaves the next test with a dirty tree."
+      ],
+      "maintenance_notes": [
+        "Keep the redaction assertion in this fixture: it is the control that keeps CI logs safe."
+      ],
+      "tested_against": [
+        "pytest 8.x"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"pytest fixtures: isolation, deterministic time, leak assertions.\"\"\"\n\nfrom __future__ import annotations\nfrom dataclasses import dataclass, field\nfrom typing import Any, Callable, Iterator\n\nimport pytest\n\nSENSITIVE_KEYS = (\"password\", \"secret\", \"token\", \"api_key\", \"authorization\")\n\n\n@dataclass(slots=True)\nclass FakeClock:\n    \"\"\"A monotonic, explicitly advanced clock.\n\n    Injected rather than monkeypatched globally, so timeout logic can still be\n    tested by advancing this clock deliberately.\n    \"\"\"\n\n    now: float = 1_700_000_000.0\n    _waiters: list[tuple[float, Callable[[], None]]] = field(default_factory=list, repr=False)\n\n    def advance(self, seconds: float) -> None:\n        self.now += seconds\n        for deadline, callback in list(self._waiters):\n            if deadline <= self.now:\n                callback()\n                self._waiters.remove((deadline, callback))\n\n\n@pytest.fixture\ndef clock() -> FakeClock:\n    return FakeClock()\n\n\n@pytest.fixture\ndef scratch(tmp_path: Any) -> Iterator[Any]:\n    \"\"\"Per-test directory; guaranteed unique, so tests cannot interfere.\"\"\"\n    root = tmp_path / \"workspace\"\n    root.mkdir()\n    yield root\n    # Deliberately no cleanup failure suppression: a broken teardown must surface.\n\n\n@pytest.fixture\ndef assert_no_secret_leak() -> Callable[[Any], None]:\n    \"\"\"Fail the test if *value* would print a secret.\n\n    Applied to assertion payloads so a regression cannot quietly write a\n    credential into CI logs.\n    \"\"\"\n\n    def _check(value: Any) -> None:\n        rendered = repr(value).lower()\n        for key in SENSITIVE_KEYS:\n            if key in rendered:\n                pytest.fail(f\"test payload appears to contain {key!r}; assertions must stay secret-free\")\n\n    return _check"
+    },
+    {
+      "id": "python-atomic-single-writer-queue",
+      "language": "python",
+      "version": "0.9.0",
+      "status": "experimental",
+      "category": "file-io",
+      "summary": "A single-writer queue file with fsync-per-record, for crash-safe append-only journals.",
+      "dependencies": [],
+      "security_notes": [
+        "A queue file may contain paths derived from user input; store digests if the path itself is sensitive.",
+        "Records must be length-prefixed or newline-delimited, otherwise a partial write corrupts every later record."
+      ],
+      "edge_cases": [
+        "A partial final record is expected after a crash; readers must tolerate and truncate it.",
+        "Two writers will interleave records; this design deliberately assumes a single writer."
+      ],
+      "maintenance_notes": [
+        "Experimental: single-writer only. Promote to stable once a multi-writer test exists."
+      ],
+      "tested_against": [
+        "CPython 3.12-3.14"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "\"\"\"Single-writer, crash-safe append-only journal.\n\nEach record is newline-delimited JSON and is fsync-ed before the append is\nconsidered durable. A crash mid-write leaves a truncated final record, which\nreaders discard.\n\"\"\"\n\nfrom __future__ import annotations\nimport json\nimport os\nfrom pathlib import Path\nfrom typing import Any, Iterator\n\n\nclass Journal:\n    def __init__(self, path: Path) -> None:\n        self.path = path\n        self.path.parent.mkdir(parents=True, exist_ok=True)\n\n    def append(self, record: dict[str, Any]) -> None:\n        line = json.dumps(record, sort_keys=True, separators=(\",\", \":\")) + \"\\n\"\n        with open(self.path, \"a\", encoding=\"utf-8\") as handle:\n            handle.write(line)\n            handle.flush()\n            os.fsync(handle.fileno())\n\n    def records(self) -> Iterator[dict[str, Any]]:\n        if not self.path.exists():\n            return\n        with open(self.path, encoding=\"utf-8\") as handle:\n            for line in handle:\n                line = line.strip()\n                if not line:\n                    continue\n                try:\n                    yield json.loads(line)\n                except json.JSONDecodeError:\n                    # Truncated tail from a crash: stop, the rest is unreachable.\n                    return"
+    },
+    {
+      "id": "typescript-jwt-verification",
+      "language": "typescript",
+      "version": "1.1.0",
+      "status": "stable",
+      "category": "authentication",
+      "summary": "JWT verification with a pinned algorithm, required claims, and no silent decode.",
+      "dependencies": [
+        "jose"
+      ],
+      "security_notes": [
+        "Pin the algorithm explicitly. Accepting the token's own header choice enables algorithm confusion, where an asymmetric public key is used as an HMAC secret.",
+        "'none' must never be in the accepted list.",
+        "Verify issuer and audience: a valid signature proves the token was minted by the key, not that it was minted for you.",
+        "Decode without verification is not a safe read path; it is trust of unverified input."
+      ],
+      "edge_cases": [
+        "Clock skew breaks exp validation; allow a small leeway (tolerance) and document it.",
+        "Key rotation needs multiple accepted keys during the overlap window.",
+        "Malformed tokens must raise, not return null, or an unchecked caller treats failure as anonymous access."
+      ],
+      "maintenance_notes": [
+        "Track the JOSE library changelog; JWT libraries have had algorithm-confusion CVEs."
+      ],
+      "tested_against": [
+        "TypeScript 5.x",
+        "jose 5.x"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "/**\n * JWT verification with a pinned algorithm and required claims.\n *\n * Every failure raises: a caller that forgets to check a nullable result would\n * otherwise treat a bad token as anonymous access.\n */\nimport { jwtVerify, type JWTPayload } from 'jose';\n\nexport interface VerifyOptions {\n  issuer: string;\n  audience: string;\n  /** Seconds of clock skew tolerated on exp/nbf. */\n  toleranceSeconds?: number;\n}\n\nexport async function verifyToken(\n  token: string,\n  key: CryptoKey,\n  options: VerifyOptions,\n): Promise<JWTPayload> {\n  const { payload } = await jwtVerify(token, key, {\n    // Never derive the algorithm from the token header.\n    algorithms: ['RS256'],\n    issuer: options.issuer,\n    audience: options.audience,\n    clockTolerance: options.toleranceSeconds ?? 5,\n    requiredClaims: ['sub', 'exp', 'iat', 'iss', 'aud'],\n  });\n  return payload;\n}\n\nexport function hasScope(payload: JWTPayload, scope: string): boolean {\n  const granted = payload.scope;\n  if (typeof granted !== 'string') {\n    return false;\n  }\n  // Default-deny: an absent or empty scope set grants nothing.\n  return granted.split(/\\s+/).filter(Boolean).includes(scope);\n}"
+    },
+    {
+      "id": "typescript-safe-html-render",
+      "language": "typescript",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "validation",
+      "summary": "Sanitise untrusted HTML before rendering it, and render everything else as text.",
+      "dependencies": [
+        "dompurify"
+      ],
+      "security_notes": [
+        "innerHTML, insertAdjacentHTML and dangerouslySetInnerHTML are all sinks; escaping is the caller's only defence.",
+        "A blocklist sanitiser is bypassable. Use an allow-list sanitiser with an explicit tag and attribute list.",
+        "Sanitise at the boundary and again at the sink: one path in the application will forget."
+      ],
+      "edge_cases": [
+        "Sanitising once and caching the result is unsafe if the value can change between render passes.",
+        "Event-handler attributes and javascript: URLs are the classic bypasses; both are covered by an allow-list."
+      ],
+      "maintenance_notes": [
+        "Pin the sanitiser version; bypass fixes land in every release for years after."
+      ],
+      "tested_against": [
+        "TypeScript 5.x",
+        "dompurify 3.x"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "/**\n * Rendering untrusted content safely.\n *\n * `renderText` is the default and needs no sanitiser. `renderHtml` exists only\n * for content that genuinely must contain markup, and it uses an allow-list.\n */\nimport DOMPurify from 'dompurify';\n\nexport const ALLOWED_TAGS = [\n  'b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre',\n];\n\nexport const ALLOWED_ATTR = ['href', 'title'];\n\n/** Default path: always use this unless markup is explicitly required. */\nexport function renderText(target: HTMLElement, value: unknown): void {\n  target.textContent = typeof value === 'string' ? value : String(value ?? '');\n}\n\n/**\n * Allow-list sanitisation. `ALLOW_DATA_ATTR` is off, `ALLOWED_URI_REGEXP`\n * blocks `javascript:` URLs, and hooks are not installed.\n */\nexport function renderHtml(target: HTMLElement, value: string): void {\n  const clean = DOMPurify.sanitize(value, {\n    ALLOWED_TAGS,\n    ALLOWED_ATTR,\n    ALLOW_DATA_ATTR: false,\n    ALLOW_ARIA_ATTR: false,\n    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form'],\n    FORBID_ATTR: ['style', 'srcset', 'formaction'],\n    USE_PROFILES: { html: true },\n  });\n  target.innerHTML = clean;\n}\n\nexport function isSafeExternalUrl(value: string): boolean {\n  try {\n    const url = new URL(value, window.location.origin);\n    return url.protocol === 'https:' || url.protocol === 'http:';\n  } catch {\n    return false;\n  }\n}"
+    },
+    {
+      "id": "go-graceful-shutdown",
+      "language": "go",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "error-handling",
+      "summary": "Signal handling with a bounded shutdown deadline and error-group fan-in.",
+      "dependencies": [],
+      "security_notes": [
+        "A shutdown path that is never reached leaves listeners and connections open on every deploy.",
+        "The drain deadline must be bounded: a hung dependency otherwise blocks termination indefinitely.",
+        "Do not log connection strings during shutdown; the goroutine dump tends to include them."
+      ],
+      "edge_cases": [
+        "SIGINT and SIGTERM must both be handled; containers send SIGTERM and a terminal sends SIGINT.",
+        "A second signal should force immediate exit, otherwise an operator cannot break a hung drain."
+      ],
+      "maintenance_notes": [
+        "Set the drain deadline from configuration; a hard-coded 30s is wrong for some deployments."
+      ],
+      "tested_against": [
+        "Go 1.21+"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "// Graceful shutdown with a bounded drain deadline.\npackage main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"log/slog\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\t\"time\"\n)\n\n// Run starts the server and returns when it has drained or the deadline passed.\nfunc Run(srv *Server, drain time.Duration) error {\n\tctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)\n\tdefer stop()\n\n\terrCh := make(chan error, 1)\n\tgo func() { errCh <- srv.ListenAndServe() }()\n\n\tselect {\n\tcase err := <-errCh:\n\t\tif errors.Is(err, ErrServerClosed) {\n\t\t\treturn nil\n\t\t}\n\t\treturn err\n\tcase <-ctx.Done():\n\t\tslog.Info(\"shutdown requested\", \"drain\", drain.String())\n\t}\n\n\tshutdownCtx, cancel := context.WithTimeout(context.Background(), drain)\n\tdefer cancel()\n\tif err := srv.Shutdown(shutdownCtx); err != nil {\n\t\treturn err\n\t}\n\t// A second signal forces immediate exit so an operator is never stuck.\n\tselect {\n\tcase err := <-errCh:\n\t\treturn err\n\tcase <-time.After(2 * time.Second):\n\t\tslog.Warn(\"drain incomplete; exiting\")\n\t\treturn os.ErrDeadlineExceeded\n\t}\n}"
+    },
+    {
+      "id": "shell-reproducible-install",
+      "language": "shell",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "configuration",
+      "summary": "A strict-mode install script with checksum verification and no curl-pipe-shell.",
+      "dependencies": [],
+      "security_notes": [
+        "curl | sh executes whatever the server returns at that moment; verify a signature or checksum instead.",
+        "set -euo pipefail is not optional: without it a failed download silently becomes an empty file.",
+        "Pin the version and verify the SHA-256 before extracting.",
+        "Never pass a secret on the command line; it is visible in the process list."
+      ],
+      "edge_cases": [
+        "A checksum mismatch must abort, not warn.",
+        "Download to a temporary file first so a partial transfer cannot be mistaken for a complete one."
+      ],
+      "maintenance_notes": [
+        "Update VERSION and SHA256 together in one commit; a mismatch between them is an outage."
+      ],
+      "tested_against": [
+        "bash 5.x"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "#!/usr/bin/env bash\n# Strict-mode installer with explicit checksum verification.\nset -euo pipefail\n\nreadonly VERSION=\"${VERSION:-1.0.0}\"\nreadonly PACKAGE=\"opencode-toolkit\"\nreadonly BASE_URL=\"${BASE_URL:-https://github.com/opencode-toolkit/opencode-toolkit/releases/download}\"\nreadonly ARTIFACT=\"${PACKAGE}-${VERSION}.tar.gz\"\nreadonly URL=\"${BASE_URL}/v${VERSION}/${ARTIFACT}\"\n\n# Bump together with VERSION; a mismatch between the two is an outage.\nreadonly EXPECTED_SHA256=\"${EXPECTED_SHA256:-REPLACE_WITH_RELEASE_SHA256}\"\n\ninstall_root=\"${INSTALL_ROOT:-/usr/local}\"\ntmp=\"$(mktemp -d)\"\ntrap 'rm -rf \"${tmp}\"' EXIT\n\necho \"Downloading ${URL}\"\nif ! curl --fail --location --proto '=https' --tlsv1.2 --silent --show-error \\\n     --output \"${tmp}/${ARTIFACT}\" \"${URL}\"; then\n  echo \"error: download failed\" >&2\n  exit 1\nfi\n\necho \"${EXPECTED_SHA256}  ${tmp}/${ARTIFACT}\" | sha256sum --check --status || {\n  echo \"error: checksum verification failed; refusing to install\" >&2\n  exit 1\n}\n\ntar -xzf \"${tmp}/${ARTIFACT}\" -C \"${tmp}\"\ninstall -d \"${install_root}\"\ninstall -m 0755 \"${tmp}/opencode\" \"${install_root}/bin/opencode\"\n\necho \"Installed ${PACKAGE} ${VERSION} to ${install_root}/bin/opencode\""
+    },
+    {
+      "id": "yaml-least-privilege-service-account",
+      "language": "yaml",
+      "version": "1.0.0",
+      "status": "stable",
+      "category": "authorization",
+      "summary": "A container workload definition with least privilege: no root, read-only rootfs, dropped capabilities.",
+      "dependencies": [],
+      "security_notes": [
+        "Running as root inside a container is root on the host if the runtime is misconfigured.",
+        "A writable root filesystem turns any file-write bug into persistence.",
+        "Drop ALL capabilities and add back only what is measured to be needed.",
+        "seccomp: RuntimeDefault blocks a large class of syscalls used by exploitation tooling."
+      ],
+      "edge_cases": [
+        "readOnlyRootFilesystem needs an explicit writable volume for any temporary file.",
+        "A dropped capability that turns out to be required shows up as a permission error at runtime, not at deploy."
+      ],
+      "maintenance_notes": [
+        "Re-audit the capability list whenever the base image changes."
+      ],
+      "tested_against": [
+        "Kubernetes 1.27+"
+      ],
+      "source": "opencode-toolkit/security review",
+      "implementation": "# Least-privilege container workload.\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: opencode-toolkit\n  labels:\n    app.kubernetes.io/name: opencode-toolkit\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: opencode-toolkit\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: opencode-toolkit\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10001\n        runAsGroup: 10001\n        fsGroup: 10001\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n        - name: opencode\n          image: ghcr.io/opencode-toolkit/opencode-toolkit:1.0.0\n          args: [\"doctor\", \"--format\", \"json\"]\n          securityContext:\n            allowPrivilegeEscalation: false\n            privileged: false\n            readOnlyRootFilesystem: true\n            runAsNonRoot: true\n            capabilities:\n              drop: [\"ALL\"]\n          resources:\n            requests:\n              cpu: 50m\n              memory: 128Mi\n            limits:\n              cpu: 500m\n              memory: 512Mi\n          volumeMounts:\n            - name: state\n              mountPath: /var/lib/opencode\n            - name: tmp\n              mountPath: /tmp\n      volumes:\n        - name: state\n          emptyDir: {}\n        - name: tmp\n          emptyDir: {}"
+    }
+  ]
+}

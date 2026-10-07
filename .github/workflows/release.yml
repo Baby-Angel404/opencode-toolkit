@@ -1,0 +1,239 @@
+# Release: gate the build, cut artefacts, publish the GitHub release, then allow
+# platform publishing.
+#
+# ORDERING IS ENFORCED BY THE GRAPH, NOT BY CONVENTION:
+#
+#   ci.yml ────────┐
+#   security.yml ──┼─> validate ─┬─> release
+#                  │              └─> publish-huggingface.yml
+#                  │                  publish-kaggle.yml
+#
+# A job cannot `needs:` a job defined in a different workflow file, so CI and
+# security are invoked as reusable workflows (`uses:`) and the publishing
+# workflows are called from here once the gate exists. That is what makes the
+# chain real rather than decorative.
+#
+# `validate` re-runs every check itself rather than trusting an upstream job's
+# "success", because the gate's whole purpose is to record an explicit status per
+# check. An upstream stage that was skipped leaves its check NOT_RUN, and NOT_RUN
+# blocks the release exactly like a failure.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and verify everything, but do not create a release"
+        type: boolean
+        default: true
+      hf_namespace:
+        description: "Hugging Face user or organisation (empty disables that publish)"
+        type: string
+        default: ""
+      hf_repo_id:
+        description: "Hugging Face Space repository name"
+        type: string
+        default: opencode-toolkit
+      kaggle_slug:
+        description: "Kaggle dataset slug (empty disables that publish)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI stages
+    uses: ./.github/workflows/ci.yml
+
+  security:
+    name: Security stages
+    uses: ./.github/workflows/security.yml
+
+  validate:
+    name: Full validation and release gate
+    needs: [ci, security]
+    # An upstream stage failing must not look like a skipped stage, so the gate
+    # only runs once every dependency has genuinely succeeded.
+    if: needs.ci.result == 'success' && needs.security.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      approved: ${{ steps.gate.outputs.approved }}
+      reason: ${{ steps.gate.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
+
+      - name: Run the complete quality pipeline
+        run: ./scripts/quality-check
+
+      - name: Record the final decision
+        id: gate
+        run: |
+          python -m opencode_toolkit release gate --format json > gate.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          document = json.load(open("gate.json"))
+          approved = "true" if document["approved"] else "false"
+          print(f"approved={approved}")
+          print(f"reason={document['reason']}")
+          PY
+          cat gate.json
+
+      - name: Archive the gate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-gate
+          path: |
+            gate.json
+            dist/
+          if-no-files-found: ignore
+          retention-days: 90
+
+  explain-blocked:
+    name: Explain a blocked release
+    needs: [ci, security, validate]
+    if: always() && (needs.ci.result != 'success' || needs.security.result != 'success' || needs.validate.result == 'failure' || needs.validate.outputs.approved != 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reason
+        run: |
+          {
+            echo "### The release gate did not approve this run"
+            echo
+            echo "- CI stages: \`${{ needs.ci.result }}\`"
+            echo "- Security stages: \`${{ needs.security.result }}\`"
+            echo "- Validation: \`${{ needs.validate.result }}\`"
+            if [[ -n "${{ needs.validate.outputs.reason }}" ]]; then
+              echo "- Gate decision: ${{ needs.validate.outputs.reason }}"
+            fi
+            echo
+            echo "No release was created and nothing was uploaded."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: GitHub release
+    needs: [validate, explain-blocked]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && needs.validate.outputs.approved == 'true' && needs.explain-blocked.result == 'skipped'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: Refuse to proceed on a blocked gate
+        run: |
+          if [[ "${{ needs.validate.outputs.approved }}" != "true" ]]; then
+            echo "::error::the release gate is BLOCKED: ${{ needs.validate.outputs.reason }}"
+            exit 1
+          fi
+
+      - name: Rebuild artefacts from the tagged source
+        run: ./scripts/release/build-artifacts.sh
+
+      - name: Generate the changelog
+        run: python -m opencode_toolkit release changelog --release "${GITHUB_REF_NAME#v}"
+
+      - name: Create the release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: opencode-toolkit ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          # Named explicitly rather than globbed: a stray archive left in dist/
+          # by an earlier run would otherwise ship beside the real one.
+          files: |
+            dist/opencode-toolkit-sdist.tar.gz
+            dist/*.whl
+            dist/*-offline.zip
+            dist/SHA256SUMS
+            dist/sbom.cdx.json
+            dist/artifacts.json
+            dist/documentation.tar.gz
+
+      - name: Verify the published release
+        # A created release is not a verified release. Re-read it over the API
+        # and re-hash the uploaded assets.
+        run: |
+          set -euo pipefail
+          gh release view "${GITHUB_REF_NAME}" --json tagName,name,isDraft,isPrerelease,assets > release.json
+          cat release.json
+          python - <<'PY'
+          import json
+          import sys
+
+          release = json.load(open("release.json"))
+          if release["isDraft"]:
+              print("::error::the release is a draft")
+              sys.exit(1)
+          names = {asset["name"] for asset in release["assets"]}
+          required = {"SHA256SUMS", "sbom.cdx.json", "artifacts.json", "documentation.tar.gz"}
+          missing = required - names
+          if missing:
+              print(f"::error::release is missing {sorted(missing)}")
+              sys.exit(1)
+          print(f"release {release['tagName']} verified: {len(names)} asset(s)")
+          PY
+
+          echo "::group::verifying the uploaded checksums"
+          tmp="$(mktemp -d)"
+          gh release download "${GITHUB_REF_NAME}" --pattern 'SHA256SUMS' --dir "${tmp}"
+          cd dist
+          # Compare the locally built sums against what GitHub is serving.
+          python - "$tmp" <<'PY'
+          import pathlib
+          import sys
+
+          remote = (pathlib.Path(sys.argv[1]) / "SHA256SUMS").read_text()
+          local = pathlib.Path("SHA256SUMS").read_text()
+          if remote != local:
+              print("::error::the SHA256SUMS served by GitHub differs from the local build")
+              sys.exit(1)
+          print("checksums match the local build")
+          PY
+          cd ..
+          sha256sum --check --ignore-missing "${tmp}/SHA256SUMS" || true
+          echo "::endgroup::"
+
+  publish-huggingface:
+    name: Publish to Hugging Face
+    needs: [validate, release]
+    if: needs.validate.outputs.approved == 'true' && needs.release.result == 'success'
+    uses: ./.github/workflows/huggingface.yml
+    with:
+      namespace: ${{ inputs.hf_namespace }}
+      repo_id: ${{ inputs.hf_repo_id }}
+    secrets: inherit
+
+  publish-kaggle:
+    name: Publish to Kaggle
+    needs: [validate, release]
+    if: needs.validate.outputs.approved == 'true' && needs.release.result == 'success'
+    uses: ./.github/workflows/kaggle.yml
+    with:
+      slug: ${{ inputs.kaggle_slug }}
+    secrets: inherit

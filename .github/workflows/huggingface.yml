@@ -1,0 +1,182 @@
+# Hugging Face publishing, run only through an approved release gate.
+#
+# ORDERING IS THE POINT OF THIS FILE. This workflow is called from `release.yml`
+# with `needs: [validate, release]`, so an upload cannot start until the gate job
+# reported `approved == 'true'` and the GitHub release succeeded. `release.yml`
+# calls this file as a reusable workflow because a job cannot depend on a job in
+# another workflow file -- without that, the ordering would only be a comment.
+#
+# The gate is checked a second time here, from the job itself, so a manual
+# invocation of this workflow still cannot publish unapproved code.
+#
+# CREDENTIALS. `HUGGINGFACE_TOKEN` is read from a repository secret and mapped
+# only into this job's `env`. It is never written into the workflow source, never
+# echoed, and never passed on a command line. When it is absent the job reports
+# SKIP PUBLISH and exits 0; it does not attempt an unauthenticated upload and it
+# does not claim success.
+#
+# CLASSIFICATION. This project is a code repository with no model weights and no
+# dataset, so Hugging Face publishing is NOT_APPLICABLE by default. The classifier
+# runs before anything else and the job exits with a clear explanation unless a
+# Space is explicitly configured. Publishing a CLI as a Dataset would
+# misrepresent it.
+
+name: Publish to Hugging Face
+
+on:
+  # Called by release.yml once the gate approves. Nothing else may reach the
+  # network from this workflow.
+  workflow_call:
+    inputs:
+      namespace:
+        description: "Hugging Face user or organisation (leave empty to only classify)"
+        type: string
+        default: ""
+      repo_id:
+        description: "Repository name"
+        type: string
+        default: opencode-toolkit
+  # Manual runs are diagnostic only: no credentials are forwarded from an
+  # ad-hoc run, and the gate is still required.
+  workflow_dispatch:
+    inputs:
+      namespace:
+        description: "Hugging Face user or organisation (leave empty to only classify)"
+        type: string
+        default: ""
+      repo_id:
+        description: "Repository name"
+        type: string
+        default: opencode-toolkit
+
+# Publishing is serialised: two concurrent uploads to the same repository race.
+concurrency:
+  group: publish-huggingface
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    name: Classify the project
+    runs-on: ubuntu-latest
+    outputs:
+      applicable: ${{ steps.classify.outputs.applicable }}
+      kind: ${{ steps.classify.outputs.kind }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: How is this project classified?
+        id: classify
+        run: |
+          python -m opencode_toolkit publish classify
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import subprocess
+
+          output = subprocess.run(
+              ["python", "-m", "opencode_toolkit", "--format", "json", "publish", "classify"],
+              capture_output=True,
+              text=True,
+              check=True,
+          ).stdout
+          document = json.loads(output)
+          huggingface = document["huggingface"]
+          print(f"applicable={str(huggingface['applicable']).lower()}")
+          print(f"kind={huggingface['kind']}")
+          PY
+
+  publish:
+    name: Publish
+    needs: [classify]
+    if: needs.classify.outputs.applicable == 'true'
+    runs-on: ubuntu-latest
+    environment: huggingface
+    permissions:
+      contents: read
+    env:
+      # The only place the token appears. Never add it to `run:`, to `with:`, or
+      # to a command line -- those are all visible in logs.
+      HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+      HF_NAMESPACE: ${{ inputs.namespace }}
+      HF_REPO_ID: ${{ inputs.repo_id || 'opencode-toolkit' }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
+
+      - name: Restore the approved gate produced by release.yml
+        # The gate is a file and this job runs on a fresh runner, so the decision
+        # has to travel with the call rather than be assumed. A manual run has no
+        # such artifact, which is exactly why it cannot publish.
+        uses: actions/download-artifact@v4
+        with:
+          name: release-gate
+          path: gate-input
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+
+      - name: Place the gate where the CLI looks for it
+        run: |
+          mkdir -p .opencode/toolkit
+          cp gate-input/gate.json .opencode/toolkit/release-gate.json
+          python -m opencode_toolkit release gate --summary
+
+      - name: Require an APPROVED release gate
+        run: |
+          if ! python -m opencode_toolkit release preflight; then
+            echo "::error::the release gate is BLOCKED; refusing to reach the network"
+            exit 1
+          fi
+
+      - name: Report credential availability without revealing values
+        run: |
+          if [[ -z "${HUGGINGFACE_TOKEN}" ]]; then
+            echo "SKIP PUBLISH"
+            echo "  HUGGINGFACE_TOKEN is not set as a repository secret."
+            echo "  Nothing was uploaded."
+            exit 0
+          fi
+          echo "HUGGINGFACE_TOKEN is present (value not displayed)"
+
+      - name: Publish
+        run: ./scripts/publishing/publish-huggingface.sh
+
+      - name: Verify the published Space independently
+        if: env.DRY_RUN != '1'
+        env:
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: ./scripts/publishing/verify-publication.sh huggingface --namespace "${HF_NAMESPACE}" --slug "${HF_REPO_ID}"
+
+  skipped:
+    name: Explain why publishing did not run
+    needs: [classify, publish]
+    if: always() && needs.publish.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reason
+        run: |
+          {
+            echo "### Hugging Face publishing did not run"
+            echo
+            echo "**Classification**: this project is a \`${{ needs.classify.outputs.kind }}\`"
+            echo "target, which has no Hugging Face representation."
+            echo "Publishing a CLI without model weights or a dataset would"
+            echo "misrepresent it. See \`opencode publish classify\`."
+            echo
+            echo "No upload was attempted and nothing is claimed as published."
+          } >> "$GITHUB_STEP_SUMMARY"

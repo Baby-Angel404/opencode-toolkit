@@ -1,0 +1,158 @@
+# Kaggle publishing, run only through an approved release gate.
+#
+# Same non-negotiable chain as the Hugging Face workflow:
+#
+#   ci -> security -> validate -> release -> publish -> remote verification
+#
+# release.yml calls this file with `needs: [validate, release]` once the gate
+# reported `approved == 'true'`. A job cannot depend on a job in another workflow
+# file, so the call -- not a comment -- is what enforces the ordering.
+#
+# CREDENTIALS. `KAGGLE_USERNAME` and `KAGGLE_KEY` come from repository secrets with
+# exactly those names and are mapped only into this job's `env`. Neither value is
+# ever printed by this workflow or by the toolkit.
+
+name: Publish to Kaggle
+
+on:
+  # Called by release.yml once the gate approves. Nothing else may reach the
+  # network from this workflow.
+  workflow_call:
+    inputs:
+      slug:
+        description: "Kaggle dataset slug"
+        type: string
+        default: opencode-toolkit
+  # Manual runs are diagnostic only: no credentials are forwarded from an
+  # ad-hoc run, and the gate is still required.
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Kaggle dataset slug"
+        type: string
+        default: opencode-toolkit
+
+concurrency:
+  group: publish-kaggle
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    name: Classify the project
+    runs-on: ubuntu-latest
+    outputs:
+      applicable: ${{ steps.classify.outputs.applicable }}
+      kind: ${{ steps.classify.outputs.kind }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: How is this project classified?
+        id: classify
+        run: |
+          python -m opencode_toolkit publish classify
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import subprocess
+
+          output = subprocess.run(
+              ["python", "-m", "opencode_toolkit", "--format", "json", "publish", "classify"],
+              capture_output=True,
+              text=True,
+              check=True,
+          ).stdout
+          document = json.loads(output)
+          kaggle = document["kaggle"]
+          print(f"applicable={str(kaggle['applicable']).lower()}")
+          print(f"kind={kaggle['kind']}")
+          PY
+
+  publish:
+    name: Publish
+    needs: [classify]
+    if: needs.classify.outputs.applicable == 'true'
+    runs-on: ubuntu-latest
+    environment: kaggle
+    permissions:
+      contents: read
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_DATASET_SLUG: ${{ inputs.slug || 'opencode-toolkit' }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
+
+      - name: Restore the approved gate produced by release.yml
+        # The gate is a file, and this job runs on a fresh runner, so the
+        # decision has to travel with the call rather than be assumed.
+        uses: actions/download-artifact@v4
+        with:
+          name: release-gate
+          path: gate-input
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+
+      - name: Place the gate where the CLI looks for it
+        run: |
+          mkdir -p .opencode/toolkit
+          cp gate-input/gate.json .opencode/toolkit/release-gate.json
+          python -m opencode_toolkit release gate --summary
+
+      - name: Require an APPROVED release gate
+        run: |
+          if ! python -m opencode_toolkit release preflight; then
+            echo "::error::the release gate is BLOCKED; refusing to reach the network"
+            exit 1
+          fi
+
+      - name: Report credential availability without revealing values
+        run: |
+          if [[ -z "${KAGGLE_USERNAME}" || -z "${KAGGLE_KEY}" ]]; then
+            echo "SKIP PUBLISH"
+            echo "  KAGGLE_USERNAME and/or KAGGLE_KEY are not set as repository secrets."
+            echo "  Nothing was uploaded."
+            exit 0
+          fi
+          echo "Kaggle credentials are present (values not displayed)"
+
+      - name: Publish
+        run: ./scripts/publishing/publish-kaggle.sh
+
+      - name: Verify the published dataset independently
+        if: env.DRY_RUN != '1'
+        run: ./scripts/publishing/verify-publication.sh kaggle --slug "${KAGGLE_DATASET_SLUG}"
+
+  skipped:
+    name: Explain why publishing did not run
+    needs: [classify, publish]
+    if: always() && needs.publish.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reason
+        run: |
+          {
+            echo "### Kaggle publishing did not run"
+            echo
+            echo "**Classification**: this project is a \`${{ needs.classify.outputs.kind }}\`"
+            echo "target, which has no Kaggle representation."
+            echo "See \`opencode publish classify\`."
+            echo
+            echo "No upload was attempted and nothing is claimed as published."
+          } >> "$GITHUB_STEP_SUMMARY"

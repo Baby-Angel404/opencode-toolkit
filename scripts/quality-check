@@ -1,0 +1,302 @@
+#!/usr/bin/env bash
+# The complete local quality pipeline.
+#
+# Runs every mandatory stage in order and writes a machine-readable release gate
+# as it goes, so `./scripts/quality-check && opencode release preflight` is a
+# genuine release precondition rather than a ritual.
+#
+# Exit code is non-zero if any required stage fails. Nothing is hidden and no
+# failure is downgraded: a stage that cannot run is recorded as NOT_RUN, which
+# blocks the gate exactly like a failure.
+#
+# Usage:
+#   ./scripts/quality-check              # everything
+#   ./scripts/quality-check --fast       # skip the slow stages
+#   ./scripts/quality-check --list       # show the stages without running them
+
+set -uo pipefail
+
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
+
+FAST=0
+LIST_ONLY=0
+for arg in "$@"; do
+  case "${arg}" in
+    --fast) FAST=1 ;;
+    --list) LIST_ONLY=1 ;;
+    -h|--help)
+      sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *)
+      printf 'unknown option: %s\n' "${arg}" >&2
+      exit 2
+      ;;
+  esac
+done
+
+# Prefer the project virtualenv, then an installed `opencode`, then the source
+# tree via PYTHONPATH. The last option means the pipeline works from a clean
+# checkout with no install step at all.
+if [[ -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
+  PYTHON="${PROJECT_ROOT}/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON="$(command -v python3)"
+else
+  printf 'error: no python3 interpreter found\n' >&2
+  exit 3
+fi
+export PYTHONPATH="${PROJECT_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+
+readonly OPENCODE=("${PYTHON}" -m opencode_toolkit)
+readonly GATE="${OPENCODE_TOOLKIT_STATE_DIR:-${PROJECT_ROOT}/.opencode/toolkit}/release-gate.json"
+
+# Stage colours, disabled when stdout is not a terminal.
+if [[ -t 1 ]]; then
+  C_RESET=$'\033[0m'; C_FAIL=$'\033[0;31m'; C_PASS=$'\033[0;32m'
+  C_SKIP=$'\033[0;33m'; C_HEAD=$'\033[1m'
+else
+  C_RESET=""; C_FAIL=""; C_PASS=""; C_SKIP=""; C_HEAD=""
+fi
+
+FAILED_STAGES=()
+declare -a STAGE_LOG=()
+
+log_stage() { printf '\n%s==> %s%s\n' "${C_HEAD}" "$1" "${C_RESET}"; }
+log_ok()    { printf '%s    PASS%s  %s\n' "${C_PASS}" "${C_RESET}" "$1"; }
+log_fail()  { printf '%s    FAIL%s  %s\n' "${C_FAIL}" "${C_RESET}" "$1"; }
+log_skip()  { printf '%s    SKIP%s  %s\n' "${C_SKIP}" "${C_RESET}" "$1"; }
+
+# record <CHECK_NAME> <STATUS> <DETAIL>
+record() {
+  "${OPENCODE[@]}" --quiet release gate --set "${1}=${2}:${3}" >/dev/null 2>&1 \
+    || printf 'warning: could not record %s in the gate\n' "${1}" >&2
+}
+
+run_stage() {
+  # run_stage <GATE_NAME> <LABEL> <detail-on-success> <command...>
+  local gate_name="$1" label="$2" detail="$3"; shift 3
+  log_stage "${label}"
+  local output status
+  output="$("$@" 2>&1)"; status=$?
+  STAGE_LOG+=("${gate_name}:$(printf '%s' "${output}" | tail -n 3 | tr '\n' ' ')")
+  if [[ ${status} -eq 0 ]]; then
+    log_ok "${label}"
+    record "${gate_name}" PASS "${detail}"
+    return 0
+  fi
+  if [[ ${status} -eq 127 ]]; then
+    log_skip "${label}: command not available"
+    record "${gate_name}" NOT_RUN "required tool is not installed: ${detail}"
+    FAILED_STAGES+=("${label} (NOT_RUN)")
+    return 1
+  fi
+  log_fail "${label} (exit ${status})"
+  printf '%s\n' "${output}" | tail -n 20 | sed 's/^/        /'
+  record "${gate_name}" FAIL "$(printf '%s' "${output}" | tail -n 1 | cut -c1-160)"
+  FAILED_STAGES+=("${label}")
+  return 1
+}
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+if [[ ${LIST_ONLY} -eq 1 ]]; then
+  cat <<'LIST'
+Stages, in order:
+  1  BUILD            wheel + sdist
+  2  FORMAT           ruff format --check
+  3  LINT             ruff check
+  4  TYPECHECK        mypy
+  5  UNIT_TEST        pytest -m unit
+  6  INTEGRATION_TEST pytest -m integration
+  7  CLI_TEST         pytest -m cli
+  8  SECURITY         pytest -m security + self security-audit
+  9  REGRESSION       pytest -m regression
+  10 SECRET_SCAN      secret scan of the tree and the built artefacts
+  11 DOCUMENTATION    docs drift check
+  12 PACKAGE          offline pack build + verify
+  13 DEPENDENCY_AUDIT pip-audit
+  14 REPRODUCIBILITY  clean-venv install and test
+LIST
+  exit 0
+fi
+
+printf '%sopencode-toolkit quality pipeline%s\n' "${C_HEAD}" "${C_RESET}"
+printf 'python  : %s\n' "$("${PYTHON}" -V 2>&1)"
+printf 'root    : %s\n' "${PROJECT_ROOT}"
+printf 'gate    : %s\n' "${GATE}"
+
+"${OPENCODE[@]}" --quiet release gate --init >/dev/null 2>&1 \
+  || { printf 'error: could not initialise the release gate\n' >&2; exit 3; }
+
+# ---------------------------------------------------------------- 1. build --
+if [[ ${FAST} -eq 0 ]]; then
+  if have ruff; then
+    # Built into a scratch directory, not dist/. The released sdist is the
+    # deterministic one `release artifacts` produces; a setuptools sdist in
+    # dist/ would sit beside it and ship two archives for the same version.
+    BUILD_SCRATCH="$(mktemp -d)"
+    run_stage BUILD "Build (wheel + sdist)" \
+      "python -m build --wheel --sdist" \
+      "${PYTHON}" -m build --wheel --sdist --outdir "${BUILD_SCRATCH}" "${PROJECT_ROOT}"
+    rm -rf "${BUILD_SCRATCH}"
+  else
+    log_skip "Build: the 'build' package is not installed"
+    record BUILD NOT_RUN "python -m build is not installed; install with pip install -e '.[dev]'"
+    FAILED_STAGES+=("Build (NOT_RUN)")
+  fi
+else
+  log_skip "Build (fast mode)"
+  record BUILD NOT_RUN "skipped by --fast"
+  FAILED_STAGES+=("Build (NOT_RUN, fast mode)")
+fi
+
+# --------------------------------------------------------------- 2. format --
+if have ruff; then
+  run_stage FORMAT "Format check" "ruff format --check passed" \
+    ruff format --check src tests scripts
+else
+  log_skip "Format: ruff is not installed"
+  record FORMAT NOT_RUN "ruff is not installed"
+  FAILED_STAGES+=("Format (NOT_RUN)")
+fi
+
+# ----------------------------------------------------------------- 3. lint --
+if have ruff; then
+  run_stage LINT "Lint" "ruff check passed" \
+    ruff check src tests scripts
+else
+  log_skip "Lint: ruff is not installed"
+  record LINT NOT_RUN "ruff is not installed"
+  FAILED_STAGES+=("Lint (NOT_RUN)")
+fi
+
+# ------------------------------------------------------------ 4. typecheck --
+if have mypy; then
+  run_stage TYPECHECK "Type check" "mypy passed" \
+    mypy --no-error-summary src
+else
+  log_skip "Type check: mypy is not installed"
+  record TYPECHECK NOT_RUN "mypy is not installed"
+  FAILED_STAGES+=("Type check (NOT_RUN)")
+fi
+
+# ------------------------------------------------------------- 5..9 tests --
+# Every suite is guarded on pytest being importable. Without the guard a missing
+# dev dependency is reported as FAIL -- "tests failed" -- when in fact no test
+# ever ran, which is the specific confusion this project exists to avoid.
+pytest_available() { "${PYTHON}" -c 'import pytest' >/dev/null 2>&1; }
+
+run_suite() {
+  # run_suite <GATE_NAME> <LABEL> <MARKER>
+  local gate_name="$1" label="$2" marker="$3"
+  if ! pytest_available; then
+    log_skip "${label}: pytest is not installed"
+    record "${gate_name}" NOT_RUN "pytest is not installed; install with pip install -e '.[dev]'"
+    FAILED_STAGES+=("${label} (NOT_RUN)")
+    return 1
+  fi
+  run_stage "${gate_name}" "${label}" "pytest -m ${marker} passed" \
+    "${PYTHON}" -m pytest -m "${marker}" -q --no-cov
+}
+
+run_suite UNIT_TEST "Unit tests" unit
+run_suite INTEGRATION_TEST "Integration tests" integration
+run_suite CLI_TEST "CLI tests" cli
+run_suite SECURITY "Security tests" security
+
+if [[ ${FAST} -eq 0 ]]; then
+  run_suite REGRESSION "Regression tests" regression
+else
+  log_skip "Regression tests (fast mode)"
+  record REGRESSION NOT_RUN "skipped by --fast"
+  FAILED_STAGES+=("Regression (NOT_RUN, fast mode)")
+fi
+
+# The toolkit auditing its own source is the strongest available self-check.
+run_stage SELF_AUDIT "Self security audit" "no finding at or above the configured threshold" \
+  "${OPENCODE[@]}" security-audit src --strict --quiet
+
+# ---------------------------------------------------------- 10. secret scan --
+log_stage "Secret scan"
+if "${PYTHON}" "${SCRIPT_DIR}/security/secret-scan.py" --root "${PROJECT_ROOT}" --gate "${GATE}"; then
+  log_ok "Secret scan"
+  record SECRET_SCAN PASS "no credential-shaped content in the tree or the build output"
+else
+  log_fail "Secret scan"
+  record SECRET_SCAN FAIL "credential-shaped content found; see the report above"
+  FAILED_STAGES+=("Secret scan")
+fi
+
+# --------------------------------------------------------- 11. documentation --
+run_stage DOCUMENTATION "Documentation drift" "docs check passed" \
+  "${OPENCODE[@]}" docs check --path src --baseline "${PROJECT_ROOT}/.opencode/toolkit/docs/baseline.json"
+
+# ---------------------------------------------------------------- 12. pack --
+if [[ ${FAST} -eq 0 ]]; then
+  # Also built into a scratch directory: this stage proves the pack builds and
+  # verifies, while the copy that ships is the one `release artifacts` names for
+  # the version. Two offline zips in dist/ would upload two bundles.
+  PACK_SCRATCH="$(mktemp -d)"
+  PACK_PATH="${PACK_SCRATCH}/opencode-toolkit-offline.zip"
+  run_stage PACKAGE "Offline package build + verify" "pack built and verified" \
+    "${OPENCODE[@]}" pack build --output "${PACK_PATH}"
+  if [[ -f "${PACK_PATH}" ]]; then
+    if "${OPENCODE[@]}" --quiet pack verify "${PACK_PATH}"; then
+      log_ok "Offline package verification"
+    else
+      log_fail "Offline package verification"
+      record PACKAGE FAIL "pack verify failed after build"
+      FAILED_STAGES+=("Pack verification")
+    fi
+  fi
+  rm -rf "${PACK_SCRATCH}"
+else
+  log_skip "Offline package (fast mode)"
+  record PACKAGE NOT_RUN "skipped by --fast"
+  FAILED_STAGES+=("Package (NOT_RUN, fast mode)")
+fi
+
+# ------------------------------------------------------ 13. dependency audit --
+if have pip-audit; then
+  # The runtime has no third-party dependencies, so the audit target is the
+  # development tool chain. An empty runtime closure is itself the result.
+  run_stage DEPENDENCY_AUDIT "Dependency audit (development tool chain)" \
+    "pip-audit found no known vulnerability" \
+    pip-audit --requirement "${PROJECT_ROOT}/requirements-dev.txt" --progress-spinner off
+else
+  log_skip "Dependency audit: pip-audit is not installed"
+  record DEPENDENCY_AUDIT NOT_RUN "pip-audit is not installed"
+  FAILED_STAGES+=("Dependency audit (NOT_RUN)")
+fi
+
+# ------------------------------------------------------ 14. reproducibility --
+if [[ ${FAST} -eq 0 ]]; then
+  run_stage REPRODUCIBILITY "Clean-environment validation" "clean venv install and test passed" \
+    "${SCRIPT_DIR}/test/clean-environment-check.sh"
+else
+  log_skip "Clean-environment validation (fast mode)"
+  record REPRODUCIBILITY NOT_RUN "skipped by --fast"
+  FAILED_STAGES+=("Reproducibility (NOT_RUN, fast mode)")
+fi
+
+# ------------------------------------------------------------------ report --
+printf '\n%s==> Stage summary%s\n' "${C_HEAD}" "${C_RESET}"
+for entry in "${STAGE_LOG[@]}"; do
+  printf '    %s\n' "${entry}"
+done
+
+printf '\n'
+"${OPENCODE[@]}" release gate || true
+
+if [[ ${#FAILED_STAGES[@]} -gt 0 ]]; then
+  printf '\n%sPIPELINE FAILED%s -- %d stage(s) did not pass:\n' "${C_FAIL}" "${C_RESET}" "${#FAILED_STAGES[@]}"
+  for stage in "${FAILED_STAGES[@]}"; do printf '  - %s\n' "${stage}"; done
+  printf '\nThe release gate is BLOCKED. Publishing is refused until every mandatory check is PASS.\n'
+  exit 1
+fi
+
+printf '\n%sPIPELINE PASSED%s -- every stage completed.\n' "${C_PASS}" "${C_RESET}"
+printf 'The release gate is APPROVED. Publishing is now permitted.\n'

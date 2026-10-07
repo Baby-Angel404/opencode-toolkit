@@ -1,0 +1,4892 @@
+{
+  "counts": {
+    "class": 99,
+    "function": 413,
+    "partial": 1,
+    "total": 512,
+    "undocumented": 11
+  },
+  "items": [
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ApiItem",
+      "returns": "",
+      "signature": "def ApiItem()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiItem.signature",
+      "returns": "str",
+      "signature": "def signature() -> str"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiItem.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiItem.undocumented_parameters",
+      "returns": "list[str]",
+      "signature": "def undocumented_parameters() -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ApiSurface",
+      "returns": "",
+      "signature": "def ApiSurface()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [
+        "kind"
+      ],
+      "qualified_name": "ApiSurface.by_kind",
+      "returns": "list[ApiItem]",
+      "signature": "def by_kind(kind: str) -> list[ApiItem]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiSurface.counts",
+      "returns": "dict[str, int]",
+      "signature": "def counts() -> dict[str, int]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiSurface.digest_items",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def digest_items() -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiSurface.partial",
+      "returns": "list[ApiItem]",
+      "signature": "def partial() -> list[ApiItem]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiSurface.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ApiSurface.undocumented",
+      "returns": "list[ApiItem]",
+      "signature": "def undocumented() -> list[ApiItem]"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Artifact",
+      "returns": "",
+      "signature": "def Artifact()"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Artifact.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ArtifactSet",
+      "returns": "",
+      "signature": "def ArtifactSet()"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "artifact"
+      ],
+      "qualified_name": "ArtifactSet.add",
+      "returns": "Artifact",
+      "signature": "def add(artifact: Artifact) -> Artifact"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "kind"
+      ],
+      "qualified_name": "ArtifactSet.by_kind",
+      "returns": "list[Artifact]",
+      "signature": "def by_kind(kind: str) -> list[Artifact]"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ArtifactSet.checksums_text",
+      "returns": "str",
+      "signature": "def checksums_text() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ArtifactSet.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "AuditEngine",
+      "returns": "",
+      "signature": "def AuditEngine()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [
+        "policy",
+        "strict",
+        "include",
+        "exclude",
+        "rules"
+      ],
+      "qualified_name": "AuditEngine.from_policy",
+      "returns": "AuditEngine",
+      "signature": "def from_policy(policy: SecurityAuditPolicy | None = None, strict: bool = False, include: Sequence[str] = (), exclude: Sequence[str] = (), rules: Iterable[str] | None = None) -> AuditEngine"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "AuditEngine.scan",
+      "returns": "ScanResult",
+      "signature": "def scan(root: Path) -> ScanResult"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "BuildResult",
+      "returns": "",
+      "signature": "def BuildResult()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "BuildResult.ok",
+      "returns": "bool",
+      "signature": "def ok() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "BuildResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Check",
+      "returns": "",
+      "signature": "def Check()"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Check.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "CheckResult",
+      "returns": "",
+      "signature": "def CheckResult()"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "CheckResult.from_dict",
+      "returns": "CheckResult",
+      "signature": "def from_dict(document: dict[str, Any]) -> CheckResult"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "CheckResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "CheckStatus",
+      "returns": "",
+      "signature": "def CheckStatus()"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "CheckStatus.permits_release",
+      "returns": "bool",
+      "signature": "def permits_release() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Checkpoint",
+      "returns": "",
+      "signature": "def Checkpoint()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Checkpoint.from_dict",
+      "returns": "Checkpoint",
+      "signature": "def from_dict(document: dict[str, Any]) -> Checkpoint"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Checkpoint.restored_plan",
+      "returns": "Plan",
+      "signature": "def restored_plan() -> Plan"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Checkpoint.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "CheckpointStore",
+      "returns": "",
+      "signature": "def CheckpointStore()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "record"
+      ],
+      "qualified_name": "CheckpointStore.append_journal",
+      "returns": "None",
+      "signature": "def append_journal(record: dict[str, Any]) -> None"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "run_id"
+      ],
+      "qualified_name": "CheckpointStore.iter_journal",
+      "returns": "Iterator[dict[str, Any]]",
+      "signature": "def iter_journal(run_id: str | None = None) -> Iterator[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "run_id",
+        "limit"
+      ],
+      "qualified_name": "CheckpointStore.journal",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def journal(run_id: str | None = None, limit: int | None = None) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "CheckpointStore.journal_path",
+      "returns": "Path",
+      "signature": "def journal_path() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "CheckpointStore.list_checkpoints",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def list_checkpoints() -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "identifier"
+      ],
+      "qualified_name": "CheckpointStore.load",
+      "returns": "Checkpoint",
+      "signature": "def load(identifier: str) -> Checkpoint"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "CheckpointStore.new_checkpoint_id",
+      "returns": "str",
+      "signature": "def new_checkpoint_id() -> str"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/checkpoint.py",
+      "kind": "function",
+      "parameters": [
+        "checkpoint"
+      ],
+      "qualified_name": "CheckpointStore.save",
+      "returns": "Path",
+      "signature": "def save(checkpoint: Checkpoint) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/publishing/classify.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Classification",
+      "returns": "",
+      "signature": "def Classification()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/classify.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Classification.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "CliContext",
+      "returns": "",
+      "signature": "def CliContext()"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "message"
+      ],
+      "qualified_name": "CliContext.error",
+      "returns": "None",
+      "signature": "def error(message: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "message"
+      ],
+      "qualified_name": "CliContext.note",
+      "returns": "None",
+      "signature": "def note(message: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "message"
+      ],
+      "qualified_name": "CliContext.warn",
+      "returns": "None",
+      "signature": "def warn(message: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "overrides"
+      ],
+      "qualified_name": "CliContext.with_overrides",
+      "returns": "CliContext",
+      "signature": "def with_overrides(overrides: dict[str, Any]) -> CliContext"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "CommandExecutor",
+      "returns": "",
+      "signature": "def CommandExecutor(self)"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "task",
+        "workspace",
+        "run_id"
+      ],
+      "qualified_name": "CommandExecutor.execute",
+      "returns": "TaskOutcome",
+      "signature": "def execute(task: Task, workspace: Path, run_id: str) -> TaskOutcome"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Confidence",
+      "returns": "",
+      "signature": "def Confidence()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Config",
+      "returns": "",
+      "signature": "def Config()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Config.exists",
+      "returns": "bool",
+      "signature": "def exists() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Config.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ConfigurationError",
+      "returns": "",
+      "signature": "def ConfigurationError()"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "ConflictError",
+      "returns": "",
+      "signature": "def ConflictError(self)"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ConflictReport",
+      "returns": "",
+      "signature": "def ConflictReport()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ConflictReport.has_conflicts",
+      "returns": "bool",
+      "signature": "def has_conflicts() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ConflictReport.summary",
+      "returns": "dict[str, Any]",
+      "signature": "def summary() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ConflictReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "Coordinator",
+      "returns": "",
+      "signature": "def Coordinator(self)"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "Coordinator.load_plan",
+      "returns": "Plan",
+      "signature": "def load_plan(path: Path) -> Plan"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [
+        "plan",
+        "run_id",
+        "checkpoint",
+        "resume_from",
+        "max_parallel"
+      ],
+      "qualified_name": "Coordinator.run",
+      "returns": "ExecutionResult",
+      "signature": "def run(plan: Plan, run_id: str | None = None, checkpoint: bool = True, resume_from: Checkpoint | None = None, max_parallel: int | None = None) -> ExecutionResult"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [
+        "plan"
+      ],
+      "qualified_name": "Coordinator.status",
+      "returns": "dict[str, Any]",
+      "signature": "def status(plan: Plan | None = None) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [
+        "plan"
+      ],
+      "qualified_name": "Coordinator.tasks",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def tasks(plan: Plan | None = None) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "DependencyGraph",
+      "returns": "",
+      "signature": "def DependencyGraph()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [
+        "tasks"
+      ],
+      "qualified_name": "DependencyGraph.build",
+      "returns": "DependencyGraph",
+      "signature": "def build(tasks: Iterable[Task]) -> DependencyGraph"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [
+        "task_id"
+      ],
+      "qualified_name": "DependencyGraph.dependents_of",
+      "returns": "list[Task]",
+      "signature": "def dependents_of(task_id: str) -> list[Task]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DependencyGraph.depth",
+      "returns": "int",
+      "signature": "def depth() -> int"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [
+        "task_id"
+      ],
+      "qualified_name": "DependencyGraph.downstream_of",
+      "returns": "set[str]",
+      "signature": "def downstream_of(task_id: str) -> set[str]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [
+        "index"
+      ],
+      "qualified_name": "DependencyGraph.iter_level",
+      "returns": "Iterator[Task]",
+      "signature": "def iter_level(index: int) -> Iterator[Task]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [
+        "completed",
+        "status"
+      ],
+      "qualified_name": "DependencyGraph.ready",
+      "returns": "list[Task]",
+      "signature": "def ready(completed: set[str], status: dict[str, TaskStatus] | None = None) -> list[Task]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DependencyGraph.to_dict",
+      "returns": "dict[str, object]",
+      "signature": "def to_dict() -> dict[str, object]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "DirectoryTransport",
+      "returns": "",
+      "signature": "def DirectoryTransport(self)"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "DirectoryTransport.has",
+      "returns": "bool",
+      "signature": "def has(tag: str) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DirectoryTransport.name",
+      "returns": "str",
+      "signature": "def name() -> str"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DirectoryTransport.online",
+      "returns": "bool",
+      "signature": "def online() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag"
+      ],
+      "qualified_name": "DirectoryTransport.pull",
+      "returns": "None",
+      "signature": "def pull(store: SnapshotStore, tag: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag",
+        "passphrase"
+      ],
+      "qualified_name": "DirectoryTransport.push",
+      "returns": "None",
+      "signature": "def push(store: SnapshotStore, tag: str, passphrase: str | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "DocsPolicy",
+      "returns": "",
+      "signature": "def DocsPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "DocsPolicy.from_mapping",
+      "returns": "DocsPolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> DocsPolicy"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "DoctorReport",
+      "returns": "",
+      "signature": "def DoctorReport()"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [
+        "check"
+      ],
+      "qualified_name": "DoctorReport.add",
+      "returns": "Check",
+      "signature": "def add(check: Check) -> Check"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DoctorReport.failures",
+      "returns": "list[Check]",
+      "signature": "def failures() -> list[Check]"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DoctorReport.ok",
+      "returns": "bool",
+      "signature": "def ok() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DoctorReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DoctorReport.warnings",
+      "returns": "list[Check]",
+      "signature": "def warnings() -> list[Check]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "DriftItem",
+      "returns": "",
+      "signature": "def DriftItem()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DriftItem.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "DriftReport",
+      "returns": "",
+      "signature": "def DriftReport()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DriftReport.by_kind",
+      "returns": "dict[str, int]",
+      "signature": "def by_kind() -> dict[str, int]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DriftReport.has_blocking",
+      "returns": "bool",
+      "signature": "def has_blocking() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "DriftReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "EncryptionError",
+      "returns": "",
+      "signature": "def EncryptionError()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ExecutionResult",
+      "returns": "",
+      "signature": "def ExecutionResult()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ExecutionResult.blocked",
+      "returns": "list[str]",
+      "signature": "def blocked() -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ExecutionResult.completed",
+      "returns": "list[str]",
+      "signature": "def completed() -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ExecutionResult.failed",
+      "returns": "list[str]",
+      "signature": "def failed() -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ExecutionResult.ok",
+      "returns": "bool",
+      "signature": "def ok() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/coordinator.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ExecutionResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Executor",
+      "returns": "",
+      "signature": "def Executor()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Executor.describe",
+      "returns": "dict[str, Any]",
+      "signature": "def describe() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "task",
+        "workspace",
+        "run_id"
+      ],
+      "qualified_name": "Executor.execute",
+      "returns": "TaskOutcome",
+      "signature": "def execute(task: Task, workspace: Path, run_id: str) -> TaskOutcome"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "FileUpdate",
+      "returns": "",
+      "signature": "def FileUpdate()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "FileUpdate.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Finding",
+      "returns": "",
+      "signature": "def Finding()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Finding.sort_key",
+      "returns": "tuple[int, int, str, int, int]",
+      "signature": "def sort_key() -> tuple[int, int, str, int, int]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Finding.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Fragment",
+      "returns": "",
+      "signature": "def Fragment()"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Fragment.from_dict",
+      "returns": "Fragment",
+      "signature": "def from_dict(document: dict[str, Any]) -> Fragment"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Fragment.render",
+      "returns": "str",
+      "signature": "def render() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Fragment.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "GatePolicy",
+      "returns": "",
+      "signature": "def GatePolicy()"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GatePolicy.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "GateResult",
+      "returns": "",
+      "signature": "def GateResult()"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.approved",
+      "returns": "bool",
+      "signature": "def approved() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.decision",
+      "returns": "str",
+      "signature": "def decision() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.failures",
+      "returns": "list[CheckResult]",
+      "signature": "def failures() -> list[CheckResult]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "GateResult.from_dict",
+      "returns": "GateResult",
+      "signature": "def from_dict(document: dict[str, Any]) -> GateResult"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "name"
+      ],
+      "qualified_name": "GateResult.get",
+      "returns": "CheckResult | None",
+      "signature": "def get(name: str) -> CheckResult | None"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.missing_checks",
+      "returns": "list[str]",
+      "signature": "def missing_checks() -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.publish_permitted",
+      "returns": "tuple[bool, str]",
+      "signature": "def publish_permitted() -> tuple[bool, str]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.reason",
+      "returns": "str",
+      "signature": "def reason() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.render",
+      "returns": "str",
+      "signature": "def render() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "GateResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/graph.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "GraphError",
+      "returns": "",
+      "signature": "def GraphError()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "HuggingFacePublisher",
+      "returns": "",
+      "signature": "def HuggingFacePublisher(self)"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "environ"
+      ],
+      "qualified_name": "HuggingFacePublisher.check_credentials",
+      "returns": "HuggingFaceResult | None",
+      "signature": "def check_credentials(environ: dict[str, str] | None = None) -> HuggingFaceResult | None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "gate"
+      ],
+      "qualified_name": "HuggingFacePublisher.check_gate",
+      "returns": "HuggingFaceResult | None",
+      "signature": "def check_gate(gate: GateResult) -> HuggingFaceResult | None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "directory",
+        "environ"
+      ],
+      "qualified_name": "HuggingFacePublisher.publish",
+      "returns": "HuggingFaceResult",
+      "signature": "def publish(directory: Path, environ: dict[str, str] | None = None) -> HuggingFaceResult"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "HuggingFacePublisher.repository",
+      "returns": "str",
+      "signature": "def repository() -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "token"
+      ],
+      "qualified_name": "HuggingFacePublisher.verify",
+      "returns": "dict[str, Any]",
+      "signature": "def verify(token: str = '') -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "HuggingFaceResult",
+      "returns": "",
+      "signature": "def HuggingFaceResult()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "HuggingFaceResult.succeeded",
+      "returns": "bool",
+      "signature": "def succeeded() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "HuggingFaceResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "IntegrityError",
+      "returns": "",
+      "signature": "def IntegrityError()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "KagglePublisher",
+      "returns": "",
+      "signature": "def KagglePublisher(self)"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "environ"
+      ],
+      "qualified_name": "KagglePublisher.check_credentials",
+      "returns": "KaggleResult | None",
+      "signature": "def check_credentials(environ: dict[str, str] | None = None) -> KaggleResult | None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "gate"
+      ],
+      "qualified_name": "KagglePublisher.check_gate",
+      "returns": "KaggleResult | None",
+      "signature": "def check_gate(gate: GateResult) -> KaggleResult | None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "KagglePublisher.dataset_ref",
+      "returns": "str",
+      "signature": "def dataset_ref() -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "directory",
+        "environ"
+      ],
+      "qualified_name": "KagglePublisher.publish",
+      "returns": "KaggleResult",
+      "signature": "def publish(directory: Path, environ: dict[str, str] | None = None) -> KaggleResult"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "username",
+        "key"
+      ],
+      "qualified_name": "KagglePublisher.verify",
+      "returns": "dict[str, Any]",
+      "signature": "def verify(username: str, key: str) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "KaggleResult",
+      "returns": "",
+      "signature": "def KaggleResult()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "KaggleResult.succeeded",
+      "returns": "bool",
+      "signature": "def succeeded() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "KaggleResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Layout",
+      "returns": "",
+      "signature": "def Layout()"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.artifacts",
+      "returns": "Path",
+      "signature": "def artifacts() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.describe",
+      "returns": "dict[str, str]",
+      "signature": "def describe() -> dict[str, str]"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.docs_cache",
+      "returns": "Path",
+      "signature": "def docs_cache() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.orchestrator",
+      "returns": "Path",
+      "signature": "def orchestrator() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.packs",
+      "returns": "Path",
+      "signature": "def packs() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.queue",
+      "returns": "Path",
+      "signature": "def queue() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Layout.snapshots",
+      "returns": "Path",
+      "signature": "def snapshots() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "LicenseRecord",
+      "returns": "",
+      "signature": "def LicenseRecord()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "LicenseRecord.may_redistribute",
+      "returns": "bool",
+      "signature": "def may_redistribute() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "LicenseRecord.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "NetworkError",
+      "returns": "",
+      "signature": "def NetworkError()"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "NotFoundError",
+      "returns": "",
+      "signature": "def NotFoundError()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "NullExecutor",
+      "returns": "",
+      "signature": "def NullExecutor()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "task",
+        "workspace",
+        "run_id"
+      ],
+      "qualified_name": "NullExecutor.execute",
+      "returns": "TaskOutcome",
+      "signature": "def execute(task: Task, workspace: Path, run_id: str) -> TaskOutcome"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/queue.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "OfflineQueue",
+      "returns": "",
+      "signature": "def OfflineQueue(self)"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/queue.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "OfflineQueue.clear",
+      "returns": "int",
+      "signature": "def clear() -> int"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/queue.py",
+      "kind": "function",
+      "parameters": [
+        "operation",
+        "tag",
+        "payload"
+      ],
+      "qualified_name": "OfflineQueue.enqueue",
+      "returns": "QueueEntry",
+      "signature": "def enqueue(operation: str, tag: str, payload: dict[str, Any] | None = None) -> QueueEntry"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/queue.py",
+      "kind": "function",
+      "parameters": [
+        "handler",
+        "max_attempts"
+      ],
+      "qualified_name": "OfflineQueue.flush",
+      "returns": "dict[str, list[str]]",
+      "signature": "def flush(handler: Callable[[QueueEntry], bool], max_attempts: int = 3) -> dict[str, list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/queue.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "OfflineQueue.pending",
+      "returns": "list[QueueEntry]",
+      "signature": "def pending() -> list[QueueEntry]"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "OrchestratorPolicy",
+      "returns": "",
+      "signature": "def OrchestratorPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "OrchestratorPolicy.from_mapping",
+      "returns": "OrchestratorPolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> OrchestratorPolicy"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "PackBuilder",
+      "returns": "",
+      "signature": "def PackBuilder(self)"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "components",
+        "output",
+        "include_dependencies",
+        "incremental_base",
+        "archive_name"
+      ],
+      "qualified_name": "PackBuilder.build",
+      "returns": "BuildResult",
+      "signature": "def build(components: list[str] | None = None, output: Path | None = None, include_dependencies: bool | None = None, incremental_base: Path | None = None, archive_name: str | None = None) -> BuildResult"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "relative"
+      ],
+      "qualified_name": "PackBuilder.component_for",
+      "returns": "str",
+      "signature": "def component_for(relative: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "relative"
+      ],
+      "qualified_name": "PackBuilder.component_label",
+      "returns": "str",
+      "signature": "def component_label(relative: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "requested"
+      ],
+      "qualified_name": "PackBuilder.resolve_components",
+      "returns": "list[str]",
+      "signature": "def resolve_components(requested: list[str]) -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "components"
+      ],
+      "qualified_name": "PackBuilder.select_files",
+      "returns": "list[Path]",
+      "signature": "def select_files(components: list[str]) -> list[Path]"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PackEntry",
+      "returns": "",
+      "signature": "def PackEntry()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "PackEntry.from_dict",
+      "returns": "PackEntry",
+      "signature": "def from_dict(document: dict[str, Any]) -> PackEntry"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PackEntry.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PackManifest",
+      "returns": "",
+      "signature": "def PackManifest()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PackManifest.checksums_text",
+      "returns": "str",
+      "signature": "def checksums_text() -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PackManifest.content_digest",
+      "returns": "str",
+      "signature": "def content_digest() -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "PackManifest.from_dict",
+      "returns": "PackManifest",
+      "signature": "def from_dict(document: dict[str, Any]) -> PackManifest"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PackManifest.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PackManifest.total_bytes",
+      "returns": "int",
+      "signature": "def total_bytes() -> int"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PackPolicy",
+      "returns": "",
+      "signature": "def PackPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "PackPolicy.from_mapping",
+      "returns": "PackPolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> PackPolicy"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Parameter",
+      "returns": "",
+      "signature": "def Parameter()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Parameter.signature",
+      "returns": "str",
+      "signature": "def signature() -> str"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Parameter.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PathState",
+      "returns": "",
+      "signature": "def PathState()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "PathState.is_conflict",
+      "returns": "bool",
+      "signature": "def is_conflict() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PatternRule",
+      "returns": "",
+      "signature": "def PatternRule()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Plan",
+      "returns": "",
+      "signature": "def Plan()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Plan.by_id",
+      "returns": "dict[str, Task]",
+      "signature": "def by_id() -> dict[str, Task]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Plan.counts",
+      "returns": "dict[str, int]",
+      "signature": "def counts() -> dict[str, int]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Plan.from_dict",
+      "returns": "Plan",
+      "signature": "def from_dict(document: dict[str, Any]) -> Plan"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Plan.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "PushResult",
+      "returns": "",
+      "signature": "def PushResult()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "QueueEntry",
+      "returns": "",
+      "signature": "def QueueEntry()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "QueueEntry.from_dict",
+      "returns": "QueueEntry",
+      "signature": "def from_dict(document: dict[str, Any]) -> QueueEntry"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "QueueEntry.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "RecordingExecutor",
+      "returns": "",
+      "signature": "def RecordingExecutor(self)"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "RecordingExecutor.describe",
+      "returns": "dict[str, Any]",
+      "signature": "def describe() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "task",
+        "workspace",
+        "run_id"
+      ],
+      "qualified_name": "RecordingExecutor.execute",
+      "returns": "TaskOutcome",
+      "signature": "def execute(task: Task, workspace: Path, run_id: str) -> TaskOutcome"
+    },
+    {
+      "file": "opencode_toolkit/core/logging.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "RedactingFormatter",
+      "returns": "",
+      "signature": "def RedactingFormatter(self)"
+    },
+    {
+      "file": "opencode_toolkit/core/logging.py",
+      "kind": "function",
+      "parameters": [
+        "record"
+      ],
+      "qualified_name": "RedactingFormatter.format",
+      "returns": "str",
+      "signature": "def format(record: logging.LogRecord) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "RedactionPolicy",
+      "returns": "",
+      "signature": "def RedactionPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "RedactionPolicy.clamp",
+      "returns": "str",
+      "signature": "def clamp(text: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "value",
+        "kind"
+      ],
+      "qualified_name": "RedactionPolicy.mask",
+      "returns": "str",
+      "signature": "def mask(value: str, kind: str = 'secret') -> str"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/redos.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "RedexMatch",
+      "returns": "",
+      "signature": "def RedexMatch()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "RedistributionDecision",
+      "returns": "",
+      "signature": "def RedistributionDecision()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "RedistributionDecision.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ReleaseGate",
+      "returns": "",
+      "signature": "def ReleaseGate()"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ReleaseGate.approved",
+      "returns": "bool",
+      "signature": "def approved() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "name",
+        "status",
+        "**kwargs"
+      ],
+      "qualified_name": "ReleaseGate.record",
+      "returns": "None",
+      "signature": "def record(name: str, status: CheckStatus | str, **kwargs: Any) -> None"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ReleaseGate.render",
+      "returns": "str",
+      "signature": "def render() -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ReleaseGate.save",
+      "returns": "Path",
+      "signature": "def save() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ReleasePolicy",
+      "returns": "",
+      "signature": "def ReleasePolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "ReleasePolicy.from_mapping",
+      "returns": "ReleasePolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> ReleasePolicy"
+    },
+    {
+      "file": "opencode_toolkit/core/pyproject.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "RequirementGroups",
+      "returns": "",
+      "signature": "def RequirementGroups(self)"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Role",
+      "returns": "",
+      "signature": "def Role()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Rule",
+      "returns": "",
+      "signature": "def Rule()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ScanOptions",
+      "returns": "",
+      "signature": "def ScanOptions()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "ScanResult",
+      "returns": "",
+      "signature": "def ScanResult()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ScanResult.counts_by_severity",
+      "returns": "dict[str, int]",
+      "signature": "def counts_by_severity() -> dict[str, int]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [
+        "fail_on"
+      ],
+      "qualified_name": "ScanResult.failing",
+      "returns": "bool",
+      "signature": "def failing(fail_on: frozenset[Severity]) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [
+        "minimum",
+        "ignore"
+      ],
+      "qualified_name": "ScanResult.filtered",
+      "returns": "ScanResult",
+      "signature": "def filtered(minimum: Severity | None = None, ignore: frozenset[str] = frozenset()) -> ScanResult"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ScanResult.highest_severity",
+      "returns": "Severity | None",
+      "signature": "def highest_severity() -> Severity | None"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ScanResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SealedPayload",
+      "returns": "",
+      "signature": "def SealedPayload()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "SealedPayload.from_dict",
+      "returns": "SealedPayload",
+      "signature": "def from_dict(document: dict[str, object]) -> SealedPayload"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SealedPayload.to_dict",
+      "returns": "dict[str, object]",
+      "signature": "def to_dict() -> dict[str, object]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SearchHit",
+      "returns": "",
+      "signature": "def SearchHit()"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SearchHit.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SecretHit",
+      "returns": "",
+      "signature": "def SecretHit()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SecretHit.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SecretScanReport",
+      "returns": "",
+      "signature": "def SecretScanReport()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SecretScanReport.clean",
+      "returns": "bool",
+      "signature": "def clean() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SecretScanReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SecurityAuditPolicy",
+      "returns": "",
+      "signature": "def SecurityAuditPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "SecurityAuditPolicy.from_mapping",
+      "returns": "SecurityAuditPolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> SecurityAuditPolicy"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Severity",
+      "returns": "",
+      "signature": "def Severity()"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Severity.rank",
+      "returns": "int",
+      "signature": "def rank() -> int"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Snapshot",
+      "returns": "",
+      "signature": "def Snapshot()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Snapshot.from_dict",
+      "returns": "Snapshot",
+      "signature": "def from_dict(document: dict[str, Any]) -> Snapshot"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Snapshot.item_map",
+      "returns": "dict[str, SnapshotItem]",
+      "signature": "def item_map() -> dict[str, SnapshotItem]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Snapshot.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Snapshot.total_bytes",
+      "returns": "int",
+      "signature": "def total_bytes() -> int"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SnapshotItem",
+      "returns": "",
+      "signature": "def SnapshotItem()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "SnapshotItem.from_dict",
+      "returns": "SnapshotItem",
+      "signature": "def from_dict(document: dict[str, Any]) -> SnapshotItem"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotItem.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "SnapshotStore",
+      "returns": "",
+      "signature": "def SnapshotStore(self)"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.blob_dir",
+      "returns": "Path",
+      "signature": "def blob_dir() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "SnapshotStore.delete",
+      "returns": "None",
+      "signature": "def delete(tag: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "digest",
+        "passphrase"
+      ],
+      "qualified_name": "SnapshotStore.get_blob",
+      "returns": "bytes",
+      "signature": "def get_blob(digest: str, passphrase: str | None = None) -> bytes"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.index_path",
+      "returns": "Path",
+      "signature": "def index_path() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.last_applied",
+      "returns": "str | None",
+      "signature": "def last_applied() -> str | None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.list_snapshots",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def list_snapshots() -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag",
+        "passphrase"
+      ],
+      "qualified_name": "SnapshotStore.load",
+      "returns": "Snapshot",
+      "signature": "def load(tag: str, passphrase: str | None = None) -> Snapshot"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.pointer_path",
+      "returns": "Path",
+      "signature": "def pointer_path() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "data",
+        "encrypt",
+        "passphrase"
+      ],
+      "qualified_name": "SnapshotStore.put_blob",
+      "returns": "str",
+      "signature": "def put_blob(data: bytes, encrypt: bool = False, passphrase: str | None = None) -> str"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag",
+        "created_at",
+        "item_count",
+        "total_bytes",
+        "encrypted",
+        "source"
+      ],
+      "qualified_name": "SnapshotStore.record_pulled",
+      "returns": "None",
+      "signature": "def record_pulled(tag: str, created_at: str, item_count: int, total_bytes: int, encrypted: bool, source: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "workspace",
+        "tag",
+        "passphrase",
+        "base_tag",
+        "force"
+      ],
+      "qualified_name": "SnapshotStore.restore",
+      "returns": "tuple[ConflictReport, SyncReport]",
+      "signature": "def restore(workspace: Path, tag: str, passphrase: str | None = None, base_tag: str | None = None, force: bool = False) -> tuple[ConflictReport, SyncReport]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "workspace",
+        "tag",
+        "description",
+        "tracked",
+        "encrypt",
+        "passphrase"
+      ],
+      "qualified_name": "SnapshotStore.save",
+      "returns": "tuple[Snapshot, SyncReport]",
+      "signature": "def save(workspace: Path, tag: str | None = None, description: str = '', tracked: tuple[str, ...] = DEFAULT_TRACKED, encrypt: bool | None = None, passphrase: str | None = None) -> tuple[Snapshot, SyncReport]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "SnapshotStore.set_last_applied",
+      "returns": "None",
+      "signature": "def set_last_applied(tag: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "workspace",
+        "paths"
+      ],
+      "qualified_name": "SnapshotStore.snapshot_of",
+      "returns": "Snapshot",
+      "signature": "def snapshot_of(workspace: Path, paths: tuple[str, ...] | list[str]) -> Snapshot"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "SnapshotStore.snapshot_path",
+      "returns": "Path",
+      "signature": "def snapshot_path(tag: str) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnapshotStore.status",
+      "returns": "SyncStatus",
+      "signature": "def status() -> SyncStatus"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Snippet",
+      "returns": "",
+      "signature": "def Snippet()"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Snippet.from_dict",
+      "returns": "Snippet",
+      "signature": "def from_dict(document: dict[str, Any]) -> Snippet"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Snippet.line_count",
+      "returns": "int",
+      "signature": "def line_count() -> int"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "function",
+      "parameters": [
+        "include_code"
+      ],
+      "qualified_name": "Snippet.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict(include_code: bool = False) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SnippetCategory",
+      "returns": "",
+      "signature": "def SnippetCategory()"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "SnippetRegistry",
+      "returns": "",
+      "signature": "def SnippetRegistry(self)"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SnippetRegistry.all",
+      "returns": "list[Snippet]",
+      "signature": "def all() -> list[Snippet]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "category"
+      ],
+      "qualified_name": "SnippetRegistry.by_category",
+      "returns": "list[Snippet]",
+      "signature": "def by_category(category: SnippetCategory) -> list[Snippet]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "status"
+      ],
+      "qualified_name": "SnippetRegistry.by_status",
+      "returns": "list[Snippet]",
+      "signature": "def by_status(status: SnippetStatus) -> list[Snippet]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "document",
+        "source"
+      ],
+      "qualified_name": "SnippetRegistry.from_dict",
+      "returns": "SnippetRegistry",
+      "signature": "def from_dict(document: dict[str, Any], source: Path | None = None) -> SnippetRegistry"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "snippet_id"
+      ],
+      "qualified_name": "SnippetRegistry.get",
+      "returns": "Snippet",
+      "signature": "def get(snippet_id: str) -> Snippet"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "SnippetRegistry.load",
+      "returns": "SnippetRegistry",
+      "signature": "def load(path: Path | None = None) -> SnippetRegistry"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "snippet_id",
+        "target",
+        "overwrite"
+      ],
+      "qualified_name": "SnippetRegistry.materialise",
+      "returns": "dict[str, Any]",
+      "signature": "def materialise(snippet_id: str, target: Path, overwrite: bool = False) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "query",
+        "limit"
+      ],
+      "qualified_name": "SnippetRegistry.search",
+      "returns": "list[SearchHit]",
+      "signature": "def search(query: str, limit: int = 20) -> list[SearchHit]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "snippet_id",
+        "target"
+      ],
+      "qualified_name": "SnippetRegistry.verify",
+      "returns": "dict[str, Any]",
+      "signature": "def verify(snippet_id: str, target: Path) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SnippetStatus",
+      "returns": "",
+      "signature": "def SnippetStatus()"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SnippetValidationError",
+      "returns": "",
+      "signature": "def SnippetValidationError()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SpaceMetadata",
+      "returns": "",
+      "signature": "def SpaceMetadata()"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SpaceMetadata.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SpaceMetadata.to_yaml",
+      "returns": "str",
+      "signature": "def to_yaml() -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "StateError",
+      "returns": "",
+      "signature": "def StateError()"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "StorageError",
+      "returns": "",
+      "signature": "def StorageError()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SyncPolicy",
+      "returns": "",
+      "signature": "def SyncPolicy()"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "SyncPolicy.from_mapping",
+      "returns": "SyncPolicy",
+      "signature": "def from_mapping(data: dict[str, Any]) -> SyncPolicy"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SyncReport",
+      "returns": "",
+      "signature": "def SyncReport()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SyncReport.ok",
+      "returns": "bool",
+      "signature": "def ok() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SyncReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "SyncStatus",
+      "returns": "",
+      "signature": "def SyncStatus()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "SyncStatus.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Task",
+      "returns": "",
+      "signature": "def Task()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [
+        "document"
+      ],
+      "qualified_name": "Task.from_dict",
+      "returns": "Task",
+      "signature": "def from_dict(document: dict[str, Any]) -> Task"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Task.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Task.validate",
+      "returns": "None",
+      "signature": "def validate() -> None"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "TaskOutcome",
+      "returns": "",
+      "signature": "def TaskOutcome()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "TaskOutcome.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "TaskStatus",
+      "returns": "",
+      "signature": "def TaskStatus()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "TaskStatus.is_terminal",
+      "returns": "bool",
+      "signature": "def is_terminal() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "TaskWrite",
+      "returns": "",
+      "signature": "def TaskWrite()"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/models.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "TaskWrite.verify",
+      "returns": "bool",
+      "signature": "def verify(root: Any) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [
+        "self"
+      ],
+      "qualified_name": "ToolkitError",
+      "returns": "",
+      "signature": "def ToolkitError(self)"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "ToolkitError.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Transport",
+      "returns": "",
+      "signature": "def Transport()"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "Transport.has",
+      "returns": "bool",
+      "signature": "def has(tag: str) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Transport.name",
+      "returns": "str",
+      "signature": "def name() -> str"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Transport.online",
+      "returns": "bool",
+      "signature": "def online() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag"
+      ],
+      "qualified_name": "Transport.pull",
+      "returns": "None",
+      "signature": "def pull(store: SnapshotStore, tag: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag",
+        "passphrase"
+      ],
+      "qualified_name": "Transport.push",
+      "returns": "None",
+      "signature": "def push(store: SnapshotStore, tag: str, passphrase: str | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "UpdateResult",
+      "returns": "",
+      "signature": "def UpdateResult()"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "UpdateResult.changed",
+      "returns": "list[FileUpdate]",
+      "signature": "def changed() -> list[FileUpdate]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "UpdateResult.needs_review",
+      "returns": "list[FileUpdate]",
+      "signature": "def needs_review() -> list[FileUpdate]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "UpdateResult.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/errors.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "UsageError",
+      "returns": "",
+      "signature": "def UsageError()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "VerificationReport",
+      "returns": "",
+      "signature": "def VerificationReport()"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "VerificationReport.to_dict",
+      "returns": "dict[str, Any]",
+      "signature": "def to_dict() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "class",
+      "parameters": [],
+      "qualified_name": "Version",
+      "returns": "",
+      "signature": "def Version()"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "Version.is_prerelease",
+      "returns": "bool",
+      "signature": "def is_prerelease() -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "Version.parse",
+      "returns": "Version",
+      "signature": "def parse(text: str) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "all_rules",
+      "returns": "tuple[Rule, ...]",
+      "signature": "def all_rules() -> tuple[Rule, ...]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "items",
+        "write"
+      ],
+      "qualified_name": "apply_updates",
+      "returns": "UpdateResult",
+      "signature": "def apply_updates(root: Path, items: list[ApiItem], write: bool = False) -> UpdateResult"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/docs.py",
+      "kind": "function",
+      "parameters": [
+        "context"
+      ],
+      "qualified_name": "args_limit",
+      "returns": "int",
+      "signature": "def args_limit(context: CliContext) -> int"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/py_ast.py",
+      "kind": "function",
+      "parameters": [
+        "args"
+      ],
+      "qualified_name": "args_literal",
+      "returns": "bool",
+      "signature": "def args_literal(args: list[ast.expr]) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "names"
+      ],
+      "qualified_name": "assert_archive_is_safe",
+      "returns": "None",
+      "signature": "def assert_archive_is_safe(names: Iterable[str]) -> None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "directory"
+      ],
+      "qualified_name": "assert_clean",
+      "returns": "SecretScanReport",
+      "signature": "def assert_clean(directory: Path) -> SecretScanReport"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "text"
+      ],
+      "qualified_name": "atomic_text",
+      "returns": "None",
+      "signature": "def atomic_text(path: Path, text: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "encoding",
+        "mode",
+        "newline"
+      ],
+      "qualified_name": "atomic_write",
+      "returns": "Iterator[IO[Any]]",
+      "signature": "def atomic_write(path: Path, encoding: str = 'utf-8', mode: int = 420, newline: str = '\\n') -> Iterator[IO[Any]]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "available_ciphers",
+      "returns": "tuple[str, ...]",
+      "signature": "def available_ciphers() -> tuple[str, ...]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "surface"
+      ],
+      "qualified_name": "baseline_document",
+      "returns": "dict[str, Any]",
+      "signature": "def baseline_document(surface: ApiSurface) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "output",
+        "version",
+        "skip_python_build",
+        "include_pack",
+        "pack_policy"
+      ],
+      "qualified_name": "build_artifacts",
+      "returns": "ArtifactSet",
+      "signature": "def build_artifacts(root: Path, output: Path, version: Version | None = None, skip_python_build: bool = False, include_pack: bool = True, pack_policy: Any | None = None) -> ArtifactSet"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "name",
+        "**kwargs"
+      ],
+      "qualified_name": "build_executor",
+      "returns": "Executor",
+      "signature": "def build_executor(name: str, **kwargs: Any) -> Executor"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "components",
+        "output",
+        "policy",
+        "**kwargs"
+      ],
+      "qualified_name": "build_pack",
+      "returns": "BuildResult",
+      "signature": "def build_pack(root: Path, components: list[str] | None = None, output: Path | None = None, policy: PackPolicy | None = None, **kwargs: Any) -> BuildResult"
+    },
+    {
+      "file": "opencode_toolkit/cli/main.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "build_parser",
+      "returns": "argparse.ArgumentParser",
+      "signature": "def build_parser() -> argparse.ArgumentParser"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/testing.py",
+      "kind": "function",
+      "parameters": [
+        "suite",
+        "args"
+      ],
+      "qualified_name": "build_pytest_argv",
+      "returns": "list[str]",
+      "signature": "def build_pytest_argv(suite: str, args: argparse.Namespace) -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "version"
+      ],
+      "qualified_name": "build_sbom",
+      "returns": "str",
+      "signature": "def build_sbom(root: Path, version: Version | None = None) -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "version",
+        "kind"
+      ],
+      "qualified_name": "bump_version",
+      "returns": "Version",
+      "signature": "def bump_version(version: Version, kind: str) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "registry"
+      ],
+      "qualified_name": "catalogue_markdown",
+      "returns": "str",
+      "signature": "def catalogue_markdown(registry: SnippetRegistry) -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "version",
+        "released"
+      ],
+      "qualified_name": "changelog_markdown",
+      "returns": "str",
+      "signature": "def changelog_markdown(root: Path, version: str | None = None, released: date | None = None) -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "fragments",
+        "version",
+        "released"
+      ],
+      "qualified_name": "changelog_release",
+      "returns": "str",
+      "signature": "def changelog_release(fragments: Iterable[Fragment], version: str, released: date | None = None) -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "fragments"
+      ],
+      "qualified_name": "changelog_unreleased",
+      "returns": "str",
+      "signature": "def changelog_unreleased(fragments: Iterable[Fragment]) -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/classify.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "classify_project",
+      "returns": "Classification",
+      "signature": "def classify_project(root: Path) -> Classification"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "directory"
+      ],
+      "qualified_name": "clean",
+      "returns": "None",
+      "signature": "def clean(directory: Path) -> None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "source",
+        "destination",
+        "allowlist"
+      ],
+      "qualified_name": "clean_publish_directory",
+      "returns": "dict[str, Any]",
+      "signature": "def clean_publish_directory(source: Path, destination: Path, allowlist: Iterable[str] = DEFAULT_ALLOWLIST) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "clear_fragments",
+      "returns": "int",
+      "signature": "def clear_fragments(root: Path) -> int"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "layout"
+      ],
+      "qualified_name": "config_path_for",
+      "returns": "Path",
+      "signature": "def config_path_for(layout: Layout) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/logging.py",
+      "kind": "function",
+      "parameters": [
+        "level",
+        "stream",
+        "policy",
+        "force"
+      ],
+      "qualified_name": "configure",
+      "returns": "logging.Logger",
+      "signature": "def configure(level: str = 'warning', stream: TextIO | None = None, policy: RedactionPolicy = DEFAULT_POLICY, force: bool = True) -> logging.Logger"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "level"
+      ],
+      "qualified_name": "configure_logging",
+      "returns": "None",
+      "signature": "def configure_logging(level: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "source",
+        "destination",
+        "mode"
+      ],
+      "qualified_name": "copy_into",
+      "returns": "None",
+      "signature": "def copy_into(source: Path, destination: Path, mode: int | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/classify.py",
+      "kind": "function",
+      "parameters": [
+        "huggingface",
+        "kaggle",
+        "environ"
+      ],
+      "qualified_name": "credential_status",
+      "returns": "dict[str, bool]",
+      "signature": "def credential_status(huggingface: bool = True, kaggle: bool = True, environ: Mapping[str, str] | None = None) -> dict[str, bool]"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "current_version",
+      "returns": "Version",
+      "signature": "def current_version(root: Path) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "owner",
+        "slug"
+      ],
+      "qualified_name": "dataset_metadata",
+      "returns": "dict[str, Any]",
+      "signature": "def dataset_metadata(root: Path, owner: str = '', slug: str = 'opencode-toolkit') -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "default_baseline_path",
+      "returns": "Path",
+      "signature": "def default_baseline_path(root: Path) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "default_config_document",
+      "returns": "dict[str, Any]",
+      "signature": "def default_config_document() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "default_registry",
+      "returns": "SnippetRegistry",
+      "signature": "def default_registry() -> SnippetRegistry"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "default_registry_path",
+      "returns": "Path",
+      "signature": "def default_registry_path() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [
+        "workspace"
+      ],
+      "qualified_name": "default_state_dir",
+      "returns": "Path",
+      "signature": "def default_state_dir(workspace: Path) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "prefix"
+      ],
+      "qualified_name": "default_tag",
+      "returns": "str",
+      "signature": "def default_tag(prefix: str = 'snapshot') -> str"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [
+        "passphrase",
+        "salt",
+        "iterations",
+        "length"
+      ],
+      "qualified_name": "derive_key",
+      "returns": "bytes",
+      "signature": "def derive_key(passphrase: str, salt: bytes, iterations: int, length: int = KEY_BYTES) -> bytes"
+    },
+    {
+      "file": "opencode_toolkit/core/exit_codes.py",
+      "kind": "function",
+      "parameters": [
+        "code"
+      ],
+      "qualified_name": "describe",
+      "returns": "str",
+      "signature": "def describe(code: int) -> str"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "detect_language",
+      "returns": "str | None",
+      "signature": "def detect_language(path: Path) -> str | None"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "detect_version",
+      "returns": "Version",
+      "signature": "def detect_version(root: Path | None = None) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "target",
+        "members",
+        "executable"
+      ],
+      "qualified_name": "deterministic_zip_write",
+      "returns": "None",
+      "signature": "def deterministic_zip_write(target: Path, members: list[tuple[str, bytes]], executable: set[str] | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "development_components",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def development_components(root: Path) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "surface",
+        "baseline",
+        "baseline_path"
+      ],
+      "qualified_name": "diff_against_baseline",
+      "returns": "DriftReport",
+      "signature": "def diff_against_baseline(surface: ApiSurface, baseline: list[dict[str, Any]] | None, baseline_path: Path | None = None) -> DriftReport"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [
+        "base",
+        "current",
+        "incoming"
+      ],
+      "qualified_name": "diff_snapshots",
+      "returns": "ConflictReport",
+      "signature": "def diff_snapshots(base: Snapshot | None, current: Snapshot | None, incoming: Snapshot) -> ConflictReport"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "directory_digest",
+      "returns": "str",
+      "signature": "def directory_digest(root: Path) -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "distribution_licence",
+      "returns": "dict[str, Any]",
+      "signature": "def distribution_licence() -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/jsonio.py",
+      "kind": "function",
+      "parameters": [
+        "payload"
+      ],
+      "qualified_name": "dump_compact",
+      "returns": "str",
+      "signature": "def dump_compact(payload: Any) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/jsonio.py",
+      "kind": "function",
+      "parameters": [
+        "payload",
+        "indent"
+      ],
+      "qualified_name": "dumps",
+      "returns": "str",
+      "signature": "def dumps(payload: Any, indent: int | None = 2) -> str"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "payload",
+        "stream"
+      ],
+      "qualified_name": "emit_json",
+      "returns": "None",
+      "signature": "def emit_json(payload: Any, stream: TextIO) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "mode"
+      ],
+      "qualified_name": "ensure_dir",
+      "returns": "Path",
+      "signature": "def ensure_dir(path: Path, mode: int = 448) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/orchestrator.py",
+      "kind": "function",
+      "parameters": [
+        "workspace"
+      ],
+      "qualified_name": "example_plan",
+      "returns": "dict[str, object]",
+      "signature": "def example_plan(workspace: Path) -> dict[str, object]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/redos.py",
+      "kind": "function",
+      "parameters": [
+        "source",
+        "language"
+      ],
+      "qualified_name": "extract_literals",
+      "returns": "list[RedexMatch]",
+      "signature": "def extract_literals(source: str, language: str) -> list[RedexMatch]"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "find_version_line",
+      "returns": "tuple[int, str]",
+      "signature": "def find_version_line(text: str) -> tuple[int, str]"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [
+        "start"
+      ],
+      "qualified_name": "find_workspace_root",
+      "returns": "Path",
+      "signature": "def find_workspace_root(start: Path | None = None) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "value",
+        "length"
+      ],
+      "qualified_name": "fingerprint",
+      "returns": "str",
+      "signature": "def fingerprint(value: str, length: int = _FINGERPRINT_LEN) -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "line"
+      ],
+      "qualified_name": "fragment_from_commit",
+      "returns": "Fragment | None",
+      "signature": "def fragment_from_commit(line: str) -> Fragment | None"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "fragments_dir",
+      "returns": "Path",
+      "signature": "def fragments_dir(root: Path) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "gate_timestamp",
+      "returns": "str",
+      "signature": "def gate_timestamp() -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/logging.py",
+      "kind": "function",
+      "parameters": [
+        "name"
+      ],
+      "qualified_name": "get_logger",
+      "returns": "logging.Logger",
+      "signature": "def get_logger(name: str | None = None) -> logging.Logger"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "archive"
+      ],
+      "qualified_name": "inspect_pack",
+      "returns": "dict[str, Any]",
+      "signature": "def inspect_pack(archive: Path) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "relative",
+        "allowlist"
+      ],
+      "qualified_name": "is_allowed",
+      "returns": "bool",
+      "signature": "def is_allowed(relative: str, allowlist: Iterable[str]) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "value"
+      ],
+      "qualified_name": "is_allowlisted",
+      "returns": "bool",
+      "signature": "def is_allowlisted(value: str) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "is_binary_suffix",
+      "returns": "bool",
+      "signature": "def is_binary_suffix(path: Path) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "relative"
+      ],
+      "qualified_name": "is_excluded",
+      "returns": "bool",
+      "signature": "def is_excluded(relative: str) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/redos.py",
+      "kind": "function",
+      "parameters": [
+        "pattern"
+      ],
+      "qualified_name": "is_vulnerable",
+      "returns": "tuple[bool, str]",
+      "signature": "def is_vulnerable(pattern: str) -> tuple[bool, str]"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "exclude_dirs",
+        "follow_symlinks",
+        "max_file_bytes"
+      ],
+      "qualified_name": "iter_files",
+      "returns": "Iterator[Path]",
+      "signature": "def iter_files(root: Path, exclude_dirs: Iterable[str] = DEFAULT_EXCLUDED_DIRS, follow_symlinks: bool = False, max_file_bytes: int = 4 * 1024 * 1024) -> Iterator[Path]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/py_ast.py",
+      "kind": "function",
+      "parameters": [
+        "file_label",
+        "source"
+      ],
+      "qualified_name": "iter_python_findings",
+      "returns": "Iterator[Finding]",
+      "signature": "def iter_python_findings(file_label: str, source: str) -> Iterator[Finding]"
+    },
+    {
+      "file": "opencode_toolkit/core/logging.py",
+      "kind": "function",
+      "parameters": [
+        "default"
+      ],
+      "qualified_name": "level_from_env",
+      "returns": "str",
+      "signature": "def level_from_env(default: str = 'warning') -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [
+        "name"
+      ],
+      "qualified_name": "licence_for",
+      "returns": "LicenseRecord | None",
+      "signature": "def licence_for(name: str) -> LicenseRecord | None"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "load_baseline",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def load_baseline(path: Path) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "layout",
+        "overrides"
+      ],
+      "qualified_name": "load_config",
+      "returns": "Config",
+      "signature": "def load_config(layout: Layout, overrides: dict[str, Any] | None = None) -> Config"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "load_fragments",
+      "returns": "list[Fragment]",
+      "signature": "def load_fragments(root: Path) -> list[Fragment]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "load_gate",
+      "returns": "GateResult",
+      "signature": "def load_gate(path: Path) -> GateResult"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "load_registry",
+      "returns": "SnippetRegistry",
+      "signature": "def load_registry(path: Path | None = None) -> SnippetRegistry"
+    },
+    {
+      "file": "opencode_toolkit/core/jsonio.py",
+      "kind": "function",
+      "parameters": [
+        "text",
+        "source"
+      ],
+      "qualified_name": "loads",
+      "returns": "Any",
+      "signature": "def loads(text: str, source: str = '<string>') -> Any"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "data",
+        "probe"
+      ],
+      "qualified_name": "looks_binary",
+      "returns": "bool",
+      "signature": "def looks_binary(data: bytes, probe: int = 4096) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/cli/main.py",
+      "kind": "function",
+      "parameters": [
+        "argv",
+        "stdout",
+        "stderr"
+      ],
+      "qualified_name": "main",
+      "returns": "int",
+      "signature": "def main(argv: Sequence[str] | None = None, stdout: TextIO | None = None, stderr: TextIO | None = None) -> int"
+    },
+    {
+      "file": "opencode_toolkit/publishing/classify.py",
+      "kind": "function",
+      "parameters": [
+        "environ",
+        "*names"
+      ],
+      "qualified_name": "missing_credentials",
+      "returns": "list[str]",
+      "signature": "def missing_credentials(environ: Mapping[str, str] | None = None, *names: str) -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "version",
+        "commit"
+      ],
+      "qualified_name": "new_gate",
+      "returns": "GateResult",
+      "signature": "def new_gate(version: str | None = None, commit: str = '') -> GateResult"
+    },
+    {
+      "file": "opencode_toolkit/orchestrator/executor.py",
+      "kind": "function",
+      "parameters": [
+        "prefix"
+      ],
+      "qualified_name": "new_run_id",
+      "returns": "str",
+      "signature": "def new_run_id(prefix: str = 'run') -> str"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "version",
+        "label"
+      ],
+      "qualified_name": "next_prerelease",
+      "returns": "Version",
+      "signature": "def next_prerelease(version: Version, label: str = 'rc.1') -> Version"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [
+        "payload",
+        "passphrase"
+      ],
+      "qualified_name": "open_sealed",
+      "returns": "bytes",
+      "signature": "def open_sealed(payload: SealedPayload, passphrase: str) -> bytes"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "parse",
+      "returns": "Version",
+      "signature": "def parse(text: str) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/core/timeutil.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "parse_timestamp",
+      "returns": "datetime",
+      "signature": "def parse_timestamp(text: str) -> datetime"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/models.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "parse_timestamp",
+      "returns": "datetime",
+      "signature": "def parse_timestamp(text: str) -> datetime"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "parse_version",
+      "returns": "Version",
+      "signature": "def parse_version(text: str) -> Version"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [
+        "label"
+      ],
+      "qualified_name": "path_kind",
+      "returns": "str",
+      "signature": "def path_kind(label: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "items"
+      ],
+      "qualified_name": "plan_file",
+      "returns": "tuple[FileUpdate, str]",
+      "signature": "def plan_file(root: Path, items: list[ApiItem]) -> tuple[FileUpdate, str]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/conflicts.py",
+      "kind": "function",
+      "parameters": [
+        "report",
+        "force"
+      ],
+      "qualified_name": "plan_restore",
+      "returns": "tuple[list[str], list[str], list[str]]",
+      "signature": "def plan_restore(report: ConflictReport, force: bool) -> tuple[list[str], list[str], list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/updater.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "items"
+      ],
+      "qualified_name": "preview_diff",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def preview_diff(root: Path, items: list[ApiItem]) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "project_dependencies",
+      "returns": "tuple[list[str], list[str]]",
+      "signature": "def project_dependencies(root: Path) -> tuple[list[str], list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/core/version.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "project_root",
+      "returns": "Path",
+      "signature": "def project_root() -> Path"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag",
+        "transport",
+        "passphrase"
+      ],
+      "qualified_name": "pull",
+      "returns": "Snapshot",
+      "signature": "def pull(store: SnapshotStore, tag: str, transport: Transport, passphrase: str | None = None) -> Snapshot"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "store",
+        "tag",
+        "transport",
+        "passphrase"
+      ],
+      "qualified_name": "push",
+      "returns": "PushResult",
+      "signature": "def push(store: SnapshotStore, tag: str, transport: Transport, passphrase: str | None = None) -> PushResult"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/py_ast.py",
+      "kind": "function",
+      "parameters": [
+        "source"
+      ],
+      "qualified_name": "python_parse_error",
+      "returns": "str | None",
+      "signature": "def python_parse_error(source: str) -> str | None"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "identifier"
+      ],
+      "qualified_name": "re_full_owner_slug",
+      "returns": "bool",
+      "signature": "def re_full_owner_slug(identifier: str) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/jsonio.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "read",
+      "returns": "Any",
+      "signature": "def read(path: Path) -> Any"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "archive"
+      ],
+      "qualified_name": "read_manifest",
+      "returns": "PackManifest",
+      "signature": "def read_manifest(archive: Path) -> PackManifest"
+    },
+    {
+      "file": "opencode_toolkit/core/pyproject.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "read_pyproject_requirements",
+      "returns": "RequirementGroups",
+      "signature": "def read_pyproject_requirements(text: str) -> RequirementGroups"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "gate",
+        "name",
+        "status",
+        "detail",
+        "duration_seconds",
+        "evidence"
+      ],
+      "qualified_name": "record",
+      "returns": "GateResult",
+      "signature": "def record(gate: GateResult, name: str, status: CheckStatus | str, detail: str = '', duration_seconds: float = 0.0, evidence: str = '') -> GateResult"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/release.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "name",
+        "status",
+        "detail"
+      ],
+      "qualified_name": "record_gate_status",
+      "returns": "None",
+      "signature": "def record_gate_status(path: Path, name: str, status: CheckStatus, detail: str) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "lines",
+        "policy"
+      ],
+      "qualified_name": "redact_env_assignments",
+      "returns": "list[str]",
+      "signature": "def redact_env_assignments(lines: list[str], policy: RedactionPolicy = DEFAULT_POLICY) -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "text",
+        "policy"
+      ],
+      "qualified_name": "redact_text",
+      "returns": "str",
+      "signature": "def redact_text(text: str, policy: RedactionPolicy = DEFAULT_POLICY) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/redact.py",
+      "kind": "function",
+      "parameters": [
+        "value",
+        "kind",
+        "keep_fingerprint",
+        "max_length"
+      ],
+      "qualified_name": "redact_value",
+      "returns": "str",
+      "signature": "def redact_value(value: str, kind: str = 'secret', keep_fingerprint: bool = True, max_length: int = 8) -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [
+        "name",
+        "installed",
+        "include_attribution"
+      ],
+      "qualified_name": "redistribution_decision",
+      "returns": "RedistributionDecision",
+      "signature": "def redistribution_decision(name: str, installed: bool = False, include_attribution: bool = True) -> RedistributionDecision"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/docs.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/orchestrator.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/pack.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/publish.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/release.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/security.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/snippet.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/sync.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/testing.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/version.py",
+      "kind": "function",
+      "parameters": [
+        "subparsers"
+      ],
+      "qualified_name": "register",
+      "returns": "None",
+      "signature": "def register(subparsers: argparse._SubParsersAction) -> None"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "function",
+      "parameters": [
+        "rule"
+      ],
+      "qualified_name": "register",
+      "returns": "Rule",
+      "signature": "def register(rule: Rule) -> Rule"
+    },
+    {
+      "file": "opencode_toolkit/snippet_verified/registry.py",
+      "kind": "function",
+      "parameters": [
+        "registry"
+      ],
+      "qualified_name": "registry_stats",
+      "returns": "dict[str, Any]",
+      "signature": "def registry_stats(registry: SnippetRegistry) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "paths"
+      ],
+      "qualified_name": "relative_paths",
+      "returns": "list[str]",
+      "signature": "def relative_paths(root: Path, paths: Iterable[Path]) -> list[str]"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "error"
+      ],
+      "qualified_name": "render_error",
+      "returns": "int",
+      "signature": "def render_error(context: CliContext | None, error: ToolkitError) -> int"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/reports.py",
+      "kind": "function",
+      "parameters": [
+        "result",
+        "stream",
+        "indent"
+      ],
+      "qualified_name": "render_json",
+      "returns": "None",
+      "signature": "def render_json(result: ScanResult, stream: TextIO, indent: int | None = 2) -> None"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/reports.py",
+      "kind": "function",
+      "parameters": [
+        "result",
+        "stream"
+      ],
+      "qualified_name": "render_sarif",
+      "returns": "None",
+      "signature": "def render_sarif(result: ScanResult, stream: TextIO) -> None"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/reports.py",
+      "kind": "function",
+      "parameters": [
+        "result",
+        "stream",
+        "colour",
+        "verbose",
+        "max_findings"
+      ],
+      "qualified_name": "render_text",
+      "returns": "None",
+      "signature": "def render_text(result: ScanResult, stream: TextIO, colour: bool = False, verbose: bool = False, max_findings: int | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [
+        "workspace",
+        "state_dir",
+        "environ"
+      ],
+      "qualified_name": "resolve_layout",
+      "returns": "Layout",
+      "signature": "def resolve_layout(workspace: Path | str | None = None, state_dir: Path | str | None = None, environ: dict[str, str] | None = None) -> Layout"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/security.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "resolve_policy",
+      "returns": "SecurityAuditPolicy",
+      "signature": "def resolve_policy(context: CliContext, args: argparse.Namespace) -> SecurityAuditPolicy"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [
+        "workspace",
+        "explicit",
+        "environ"
+      ],
+      "qualified_name": "resolve_state_dir",
+      "returns": "tuple[Path, str]",
+      "signature": "def resolve_state_dir(workspace: Path, explicit: Path | str | None = None, environ: dict[str, str] | None = None) -> tuple[Path, str]"
+    },
+    {
+      "file": "opencode_toolkit/core/paths.py",
+      "kind": "function",
+      "parameters": [
+        "explicit"
+      ],
+      "qualified_name": "resolve_workspace",
+      "returns": "Path",
+      "signature": "def resolve_workspace(explicit: Path | str | None = None) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "function",
+      "parameters": [
+        "rule_id"
+      ],
+      "qualified_name": "rule_by_id",
+      "returns": "Rule | None",
+      "signature": "def rule_by_id(rule_id: str) -> Rule | None"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "rule_catalogue",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def rule_catalogue() -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "rule_confidence_summary",
+      "returns": "dict[str, int]",
+      "signature": "def rule_confidence_summary() -> dict[str, int]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/rules.py",
+      "kind": "function",
+      "parameters": [
+        "language"
+      ],
+      "qualified_name": "rules_for_language",
+      "returns": "tuple[Rule, ...]",
+      "signature": "def rules_for_language(language: str) -> tuple[Rule, ...]"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/security.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_audit",
+      "returns": "int",
+      "signature": "def run_audit(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/docs.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_docs",
+      "returns": "int",
+      "signature": "def run_docs(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/doctor.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_doctor",
+      "returns": "int",
+      "signature": "def run_doctor(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/orchestrator.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_orchestrator",
+      "returns": "int",
+      "signature": "def run_orchestrator(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/pack.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_pack",
+      "returns": "int",
+      "signature": "def run_pack(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/publish.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_publish",
+      "returns": "int",
+      "signature": "def run_publish(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/release.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_release",
+      "returns": "int",
+      "signature": "def run_release(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/snippet.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_snippet",
+      "returns": "int",
+      "signature": "def run_snippet(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/sync.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_sync",
+      "returns": "int",
+      "signature": "def run_sync(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/testing.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_test",
+      "returns": "int",
+      "signature": "def run_test(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/version.py",
+      "kind": "function",
+      "parameters": [
+        "context",
+        "args"
+      ],
+      "qualified_name": "run_version",
+      "returns": "int",
+      "signature": "def run_version(context: CliContext, args: argparse.Namespace) -> int"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "runtime_components",
+      "returns": "list[dict[str, Any]]",
+      "signature": "def runtime_components(root: Path) -> list[dict[str, Any]]"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "version"
+      ],
+      "qualified_name": "sbom_document",
+      "returns": "dict[str, Any]",
+      "signature": "def sbom_document(root: Path, version: Version | None = None) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/release/sbom.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "sbom_summary",
+      "returns": "dict[str, Any]",
+      "signature": "def sbom_summary(root: Path) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/redos.py",
+      "kind": "function",
+      "parameters": [
+        "file_label",
+        "source",
+        "language"
+      ],
+      "qualified_name": "scan_for_redos",
+      "returns": "list[Finding]",
+      "signature": "def scan_for_redos(file_label: str, source: str, language: str) -> list[Finding]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "skip_allowlist"
+      ],
+      "qualified_name": "scan_for_secrets",
+      "returns": "SecretScanReport",
+      "signature": "def scan_for_secrets(root: Path, skip_allowlist: Iterable[str] = ()) -> SecretScanReport"
+    },
+    {
+      "file": "opencode_toolkit/security_audit/engine.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "policy",
+        "**kwargs"
+      ],
+      "qualified_name": "scan_path",
+      "returns": "ScanResult",
+      "signature": "def scan_path(root: Path, policy: SecurityAuditPolicy | None = None, **kwargs: Any) -> ScanResult"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/scanner.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "include_extensions",
+        "exclude_dirs",
+        "max_file_bytes"
+      ],
+      "qualified_name": "scan_tree",
+      "returns": "ApiSurface",
+      "signature": "def scan_tree(root: Path, include_extensions: Iterable[str] = ('.py', '.js', '.ts', '.go'), exclude_dirs: Iterable[str] = ('.git', '.venv', 'venv', 'node_modules', '__pycache__', 'dist', 'build'), max_file_bytes: int = 1000000) -> ApiSurface"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [
+        "plaintext",
+        "passphrase",
+        "iterations",
+        "cipher"
+      ],
+      "qualified_name": "seal",
+      "returns": "SealedPayload",
+      "signature": "def seal(plaintext: bytes, passphrase: str, iterations: int = DEFAULT_ITERATIONS, cipher: str | None = None) -> SealedPayload"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "title",
+        "stream"
+      ],
+      "qualified_name": "section",
+      "returns": "None",
+      "signature": "def section(title: str, stream: TextIO) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "data"
+      ],
+      "qualified_name": "sha256_bytes",
+      "returns": "str",
+      "signature": "def sha256_bytes(data: bytes) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path"
+      ],
+      "qualified_name": "sha256_file",
+      "returns": "str",
+      "signature": "def sha256_file(path: Path) -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "space_metadata",
+      "returns": "SpaceMetadata",
+      "signature": "def space_metadata(root: Path) -> SpaceMetadata"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/testing.py",
+      "kind": "function",
+      "parameters": [
+        "results"
+      ],
+      "qualified_name": "suite_report",
+      "returns": "dict[str, Any]",
+      "signature": "def suite_report(results: dict[str, Any]) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "report"
+      ],
+      "qualified_name": "summarise",
+      "returns": "str",
+      "signature": "def summarise(report: SyncReport) -> str"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "report",
+        "items"
+      ],
+      "qualified_name": "summarise_for_report",
+      "returns": "dict[str, Any]",
+      "signature": "def summarise_for_report(report: DriftReport, items: list[ApiItem]) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/cli/context.py",
+      "kind": "function",
+      "parameters": [
+        "rows",
+        "stream",
+        "indent"
+      ],
+      "qualified_name": "table",
+      "returns": "None",
+      "signature": "def table(rows: list[tuple[str, str]], stream: TextIO, indent: str = '  ') -> None"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/licenses.py",
+      "kind": "function",
+      "parameters": [
+        "records"
+      ],
+      "qualified_name": "third_party_notice",
+      "returns": "str",
+      "signature": "def third_party_notice(records: list[LicenseRecord]) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/timeutil.py",
+      "kind": "function",
+      "parameters": [
+        "text"
+      ],
+      "qualified_name": "to_stamp",
+      "returns": "str",
+      "signature": "def to_stamp(text: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "target",
+        "create"
+      ],
+      "qualified_name": "unavailable_transport",
+      "returns": "Transport",
+      "signature": "def unavailable_transport(target: str, create: bool = False) -> Transport"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/builder.py",
+      "kind": "function",
+      "parameters": [
+        "archive",
+        "output"
+      ],
+      "qualified_name": "update_manifest",
+      "returns": "BuildResult",
+      "signature": "def update_manifest(archive: Path, output: Path) -> BuildResult"
+    },
+    {
+      "file": "opencode_toolkit/release/version.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "target",
+        "expected_current"
+      ],
+      "qualified_name": "update_version_files",
+      "returns": "dict[str, str]",
+      "signature": "def update_version_files(root: Path, target: Version, expected_current: Version | None = None) -> dict[str, str]"
+    },
+    {
+      "file": "opencode_toolkit/core/timeutil.py",
+      "kind": "function",
+      "parameters": [],
+      "qualified_name": "utc_now",
+      "returns": "str",
+      "signature": "def utc_now() -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "directory"
+      ],
+      "qualified_name": "validate_dataset_metadata",
+      "returns": "tuple[bool, list[str]]",
+      "signature": "def validate_dataset_metadata(directory: Path) -> tuple[bool, list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/crypto.py",
+      "kind": "function",
+      "parameters": [
+        "iterations"
+      ],
+      "qualified_name": "validate_iterations",
+      "returns": "int",
+      "signature": "def validate_iterations(iterations: int) -> int"
+    },
+    {
+      "file": "opencode_toolkit/publishing/huggingface.py",
+      "kind": "function",
+      "parameters": [
+        "directory"
+      ],
+      "qualified_name": "validate_space_metadata",
+      "returns": "tuple[bool, list[str]]",
+      "signature": "def validate_space_metadata(directory: Path) -> tuple[bool, list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "tag"
+      ],
+      "qualified_name": "validate_tag",
+      "returns": "str",
+      "signature": "def validate_tag(tag: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "archive"
+      ],
+      "qualified_name": "verify_archive",
+      "returns": "VerificationReport",
+      "signature": "def verify_archive(archive: Path) -> VerificationReport"
+    },
+    {
+      "file": "opencode_toolkit/release/artifacts.py",
+      "kind": "function",
+      "parameters": [
+        "artifacts"
+      ],
+      "qualified_name": "verify_artifacts",
+      "returns": "dict[str, Any]",
+      "signature": "def verify_artifacts(artifacts: ArtifactSet) -> dict[str, Any]"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/sync.py",
+      "kind": "function",
+      "parameters": [
+        "source",
+        "target"
+      ],
+      "qualified_name": "verify_copy",
+      "returns": "bool",
+      "signature": "def verify_copy(source: Path, target: Path) -> bool"
+    },
+    {
+      "file": "opencode_toolkit/core/config.py",
+      "kind": "function",
+      "parameters": [
+        "config",
+        "tool_version"
+      ],
+      "qualified_name": "version_guard",
+      "returns": "None",
+      "signature": "def version_guard(config: Config, tool_version: Version | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/jsonio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "payload",
+        "indent"
+      ],
+      "qualified_name": "write",
+      "returns": "None",
+      "signature": "def write(path: Path, payload: Any, indent: int | None = 2) -> None"
+    },
+    {
+      "file": "opencode_toolkit/live_docs/drift.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "surface",
+        "force"
+      ],
+      "qualified_name": "write_baseline",
+      "returns": "Path",
+      "signature": "def write_baseline(path: Path, surface: ApiSurface, force: bool = False) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "data",
+        "mode"
+      ],
+      "qualified_name": "write_bytes_atomic",
+      "returns": "None",
+      "signature": "def write_bytes_atomic(path: Path, data: bytes, mode: int = 420) -> None"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "version",
+        "released"
+      ],
+      "qualified_name": "write_changelog",
+      "returns": "Path",
+      "signature": "def write_changelog(root: Path, version: str | None = None, released: date | None = None) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/release/changelog.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "fragment"
+      ],
+      "qualified_name": "write_fragment",
+      "returns": "Path",
+      "signature": "def write_fragment(root: Path, fragment: Fragment) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/release/gate.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "result"
+      ],
+      "qualified_name": "write_gate",
+      "returns": "Path",
+      "signature": "def write_gate(path: Path, result: GateResult) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/cli/commands/release.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "gate"
+      ],
+      "qualified_name": "write_gate_json",
+      "returns": "None",
+      "signature": "def write_gate_json(path: Path, gate: GateResult) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "text",
+        "expected_sha256",
+        "mode"
+      ],
+      "qualified_name": "write_guarded",
+      "returns": "None",
+      "signature": "def write_guarded(path: Path, text: str, expected_sha256: str, mode: int = 420) -> None"
+    },
+    {
+      "file": "opencode_toolkit/offline_pack/manifest.py",
+      "kind": "function",
+      "parameters": [
+        "manifest"
+      ],
+      "qualified_name": "write_manifest_json",
+      "returns": "str",
+      "signature": "def write_manifest_json(manifest: PackManifest) -> str"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "text",
+        "mode"
+      ],
+      "qualified_name": "write_new",
+      "returns": "None",
+      "signature": "def write_new(path: Path, text: str, mode: int = 420) -> None"
+    },
+    {
+      "file": "opencode_toolkit/workflow_sync/store.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "iterations"
+      ],
+      "qualified_name": "write_passphrase_hint",
+      "returns": "None",
+      "signature": "def write_passphrase_hint(path: Path, iterations: int) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/fsio.py",
+      "kind": "function",
+      "parameters": [
+        "path",
+        "text",
+        "mode"
+      ],
+      "qualified_name": "write_text_atomic",
+      "returns": "None",
+      "signature": "def write_text_atomic(path: Path, text: str, mode: int = 420) -> None"
+    }
+  ],
+  "kind": "opencode-toolkit/docs-baseline",
+  "root": "/home/qwerty/Documents/Default Project/opencode-toolkit/src",
+  "schema": 1
+}

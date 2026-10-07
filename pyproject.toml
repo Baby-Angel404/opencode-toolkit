@@ -1,0 +1,173 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opencode-toolkit"
+version = "0.1.0"
+description = "Unified OpenCode engineering toolkit: security audit, workflow sync, verified snippets, multi-agent orchestration, offline packs and live documentation."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "OpenCode Toolkit Maintainers" }]
+keywords = ["opencode", "security", "static-analysis", "orchestration", "offline", "documentation"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# The runtime is intentionally dependency-free: every component is implemented
+# with the Python standard library only. This keeps the offline pack honest,
+# keeps clean-checkout installs deterministic, and removes third-party
+# redistribution/licensing questions from the published artifacts.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "pip-audit>=2.7",
+  "build>=1.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/opencode-toolkit/opencode-toolkit"
+Documentation = "https://github.com/opencode-toolkit/opencode-toolkit/tree/main/docs"
+Issues = "https://github.com/opencode-toolkit/opencode-toolkit/issues"
+
+[project.scripts]
+opencode = "opencode_toolkit.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["opencode_toolkit*"]
+
+[tool.setuptools.package-data]
+opencode_toolkit = ["py.typed", "snippet_verified/data/*.json", "release/templates/*"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "unit: isolated unit tests",
+  "integration: cross-component tests",
+  "cli: command line interface tests",
+  "security: security-sensitive behaviour tests",
+  "regression: tests added to pin a previously fixed defect",
+  "slow: tests that take more than a couple of seconds",
+]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["opencode_toolkit"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "W",
+  "F",
+  "I",
+  "B",
+  "C4",
+  "UP",
+  "S",
+  "SIM",
+  "RET",
+  "ARG",
+  "PTH",
+  "TID",
+  "RUF",
+]
+ignore = [
+  "S101", # asserts are used for internal invariants and in tests
+  # `ruff format` owns line length for code it can reflow. E501 would still fire
+  # on single-token lines it cannot split: multi-sentence advisory text in the
+  # rule catalogue, user-facing hint strings, and test fixtures that embed source
+  # as one escaped literal. Those are prose, not unreadable code.
+  "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The security test suite and the scanner fixtures contain realistic *fake*
+# credentials; flagging them would make the real findings unreadable.
+"tests/**" = ["S105", "S106", "S307", "S311", "S324", "S501", "ARG001", "ARG002", "ARG005"]
+# Shell scripts drive a fixed argv with no user input, and call out to the
+# interpreter and container runtime by name.
+"scripts/**" = ["S603", "S607"]
+"scripts/security/secret-scan.py" = ["S603"]
+# The rule catalogue stores credential *patterns* and report category labels, so
+# the hardcoded-password heuristic fires on the words themselves.
+"src/opencode_toolkit/security_audit/rules.py" = ["S105", "S106"]
+# The publishers call urlopen against a fixed https:// API base that is a module
+# constant, never a caller-supplied URL, so scheme confusion is not reachable.
+"src/opencode_toolkit/publishing/huggingface.py" = ["S310"]
+"src/opencode_toolkit/publishing/kaggle.py" = ["S310"]
+# CLI command handlers share one `(context, args)` signature because the
+# dispatch table calls them uniformly; a handler that needs neither argument is
+# still a valid handler.
+"src/opencode_toolkit/cli/commands/*.py" = ["ARG001"]
+# `git` is invoked from PATH on purpose: the release gate must work on any
+# machine where the user has git but no fixed absolute path for it.
+"src/opencode_toolkit/cli/commands/release.py" = ["S607"]
+# Scanner fixtures exist to be detected: they deliberately contain shell=True,
+# unsafe deserialisation, predictable temp files, and partial executable paths.
+"tests/fixtures/*" = ["S", "PTH", "PL"]
+"src/opencode_toolkit/snippet_verified/data/*" = ["S105", "S106"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+mypy_path = "src"
+strict = true
+warn_unreachable = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+show_error_codes = true
+
+# Optional libraries, imported lazily behind availability guards and absent from
+# the zero-dependency runtime, plus tomllib -- stdlib on 3.11+ but invisible to a
+# checker configured for python_version = 3.10. Treating them as opaque keeps the
+# check meaningful for the code that actually ships.
+[[tool.mypy.overrides]]
+module = ["cryptography.*", "huggingface_hub.*", "tomllib", "yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true
+
+[tool.pip-audit]
+# The runtime has no third-party dependencies, so the audit target is the
+# development tool chain. An empty runtime closure is itself the audit result.
+require-hashes = false
+strict = false

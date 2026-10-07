@@ -1,0 +1,70 @@
+{
+  "config_version": 1,
+  "project": "opencode-toolkit",
+  "security_audit": {
+    "include_extensions": [
+      ".py",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".ts",
+      ".tsx",
+      ".go"
+    ],
+    "exclude_dirs": [
+      ".git",
+      ".venv",
+      "venv",
+      "node_modules",
+      "__pycache__",
+      "dist",
+      "build",
+      ".mypy_cache",
+      ".pytest_cache",
+      ".ruff_cache"
+    ],
+    "max_file_bytes": 4000000,
+    "follow_symlinks": false,
+    "fail_on": [
+      "critical",
+      "high"
+    ],
+    "ignore_rule_ids": [],
+    "exclude_paths": []
+  },
+  "sync": {
+    "kdf_algorithm": "pbkdf2-hmac-sha256",
+    "kdf_iterations": 600000,
+    "salt_bytes": 16,
+    "nonce_bytes": 16,
+    "encrypt_by_default": true,
+    "redact_env_files": true
+  },
+  "orchestrator": {
+    "max_parallel_agents": 4,
+    "task_timeout_seconds": 1800,
+    "max_task_retries": 2,
+    "require_ownership": true,
+    "checkpoint_on_transition": true
+  },
+  "pack": {
+    "include_docs": true,
+    "include_dependencies": false,
+    "exclude_patterns": [
+      "*.pyc",
+      "__pycache__/*",
+      ".git/*"
+    ],
+    "verify_on_build": true
+  },
+  "docs": {
+    "docstring_style": "google",
+    "require_docstrings_for_public": true,
+    "check_cli_commands": true
+  },
+  "release": {
+    "require_reproducibility": true,
+    "allow_prerelease": false
+  }
+}

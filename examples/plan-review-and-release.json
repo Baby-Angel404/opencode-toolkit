@@ -1,0 +1,135 @@
+{
+  "description": "Plan the change, implement it, test it, document it and review it.",
+  "kind": "opencode-toolkit/plan",
+  "max_parallel_agents": 4,
+  "name": "example-release-check",
+  "require_ownership": true,
+  "schema": 1,
+  "tasks": [
+    {
+      "attempts": 0,
+      "checkpoint_id": "",
+      "command": [],
+      "depends_on": [],
+      "description": "Turn the request into an ordered set of tasks with dependencies.",
+      "exit_code": null,
+      "finished_at": "",
+      "id": "plan",
+      "max_retries": 0,
+      "notes": [],
+      "owner": "",
+      "role": "planner",
+      "started_at": "",
+      "status": "pending",
+      "timeout_seconds": 1800,
+      "title": "Decompose the change into tasks",
+      "writes": []
+    },
+    {
+      "attempts": 0,
+      "checkpoint_id": "",
+      "command": [
+        "python3",
+        "-c",
+        "print('implementing')"
+      ],
+      "depends_on": [
+        "plan"
+      ],
+      "description": "",
+      "exit_code": null,
+      "finished_at": "",
+      "id": "implement",
+      "max_retries": 1,
+      "notes": [],
+      "owner": "",
+      "role": "code_author",
+      "started_at": "",
+      "status": "pending",
+      "timeout_seconds": 1800,
+      "title": "Implement the change",
+      "writes": [
+        {
+          "expected_sha256": null,
+          "path": "example_output.txt"
+        }
+      ]
+    },
+    {
+      "attempts": 0,
+      "checkpoint_id": "",
+      "command": [
+        "python3",
+        "-c",
+        "print('tests would run here')"
+      ],
+      "depends_on": [
+        "implement"
+      ],
+      "description": "",
+      "exit_code": null,
+      "finished_at": "",
+      "id": "test",
+      "max_retries": 0,
+      "notes": [],
+      "owner": "",
+      "role": "tester",
+      "started_at": "",
+      "status": "pending",
+      "timeout_seconds": 1800,
+      "title": "Run the test suite",
+      "writes": []
+    },
+    {
+      "attempts": 0,
+      "checkpoint_id": "",
+      "command": [],
+      "depends_on": [
+        "implement"
+      ],
+      "description": "Reflect the new behaviour in docs/ without touching unrelated prose.",
+      "exit_code": null,
+      "finished_at": "",
+      "id": "document",
+      "max_retries": 0,
+      "notes": [],
+      "owner": "",
+      "role": "documentation_maintainer",
+      "started_at": "",
+      "status": "pending",
+      "timeout_seconds": 1800,
+      "title": "Update the documentation",
+      "writes": []
+    },
+    {
+      "attempts": 0,
+      "checkpoint_id": "",
+      "command": [
+        "python3",
+        "-m",
+        "opencode_toolkit",
+        "security-audit",
+        "src",
+        "--fail-on",
+        "critical"
+      ],
+      "depends_on": [
+        "implement"
+      ],
+      "description": "",
+      "exit_code": null,
+      "finished_at": "",
+      "id": "security-review",
+      "max_retries": 0,
+      "notes": [],
+      "owner": "",
+      "role": "security_reviewer",
+      "started_at": "",
+      "status": "pending",
+      "timeout_seconds": 600,
+      "title": "Review for security regressions",
+      "writes": []
+    }
+  ],
+  "workspace": "/home/qwerty/Documents/Default Project/opencode-toolkit"
+}

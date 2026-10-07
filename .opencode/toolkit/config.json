@@ -1,0 +1,27 @@
+{
+  "config_version": 1,
+  "project": "opencode-toolkit",
+  "security_audit": {
+    "exclude_paths": [
+      "/security_audit/rules.py",
+      "/security_audit/py_ast.py",
+      "/security_audit/redos.py",
+      "tests/*",
+      "examples/*"
+    ],
+    "ignore_rule_ids": [
+      "OCSA-VALID-002"
+    ]
+  },
+  "sync": {
+    "kdf_iterations": 600000
+  },
+  "orchestrator": {
+    "max_parallel_agents": 4,
+    "task_timeout_seconds": 1800
+  },
+  "release": {
+    "require_reproducibility": true,
+    "allow_prerelease": false
+  }
+}
