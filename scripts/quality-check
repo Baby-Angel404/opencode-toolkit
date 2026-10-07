@@ -100,7 +100,16 @@ run_stage() {
   return 1
 }
 
-have() { command -v "$1" >/dev/null 2>&1; }
+# Can the resolved interpreter import this tool? Resolving through ${PYTHON}
+# rather than PATH is what makes `pip install -e ".[dev]"` sufficient: the tools
+# land in the virtualenv's bin directory, which is not necessarily on PATH.
+have() { "${PYTHON}" -c "import ${1//-/_}" >/dev/null 2>&1; }
+
+tool() {
+  # tool <import-name> <args...> -- run a console tool as a module.
+  local module="$1"; shift
+  "${PYTHON}" -m "${module}" "$@"
+}
 
 if [[ ${LIST_ONLY} -eq 1 ]]; then
   cat <<'LIST'
@@ -133,14 +142,15 @@ printf 'gate    : %s\n' "${GATE}"
 
 # ---------------------------------------------------------------- 1. build --
 if [[ ${FAST} -eq 0 ]]; then
-  if have ruff; then
+  if have build; then
     # Built into a scratch directory, not dist/. The released sdist is the
     # deterministic one `release artifacts` produces; a setuptools sdist in
     # dist/ would sit beside it and ship two archives for the same version.
     BUILD_SCRATCH="$(mktemp -d)"
     run_stage BUILD "Build (wheel + sdist)" \
       "python -m build --wheel --sdist" \
-      "${PYTHON}" -m build --wheel --sdist --outdir "${BUILD_SCRATCH}" "${PROJECT_ROOT}"
+      "${PYTHON}" -m build --wheel --sdist \
+        --outdir "${BUILD_SCRATCH}" "${PROJECT_ROOT}"
     rm -rf "${BUILD_SCRATCH}"
   else
     log_skip "Build: the 'build' package is not installed"
@@ -156,7 +166,7 @@ fi
 # --------------------------------------------------------------- 2. format --
 if have ruff; then
   run_stage FORMAT "Format check" "ruff format --check passed" \
-    ruff format --check src tests scripts
+    tool ruff format --check src tests scripts
 else
   log_skip "Format: ruff is not installed"
   record FORMAT NOT_RUN "ruff is not installed"
@@ -166,7 +176,7 @@ fi
 # ----------------------------------------------------------------- 3. lint --
 if have ruff; then
   run_stage LINT "Lint" "ruff check passed" \
-    ruff check src tests scripts
+    tool ruff check src tests scripts
 else
   log_skip "Lint: ruff is not installed"
   record LINT NOT_RUN "ruff is not installed"
@@ -176,7 +186,7 @@ fi
 # ------------------------------------------------------------ 4. typecheck --
 if have mypy; then
   run_stage TYPECHECK "Type check" "mypy passed" \
-    mypy --no-error-summary src
+    tool mypy --no-error-summary src
 else
   log_skip "Type check: mypy is not installed"
   record TYPECHECK NOT_RUN "mypy is not installed"
@@ -260,12 +270,13 @@ else
 fi
 
 # ------------------------------------------------------ 13. dependency audit --
-if have pip-audit; then
+if have pip_audit; then
   # The runtime has no third-party dependencies, so the audit target is the
   # development tool chain. An empty runtime closure is itself the result.
   run_stage DEPENDENCY_AUDIT "Dependency audit (development tool chain)" \
     "pip-audit found no known vulnerability" \
-    pip-audit --requirement "${PROJECT_ROOT}/requirements-dev.txt" --progress-spinner off
+    tool pip_audit --requirement "${PROJECT_ROOT}/requirements-dev.txt" \
+      --progress-spinner off
 else
   log_skip "Dependency audit: pip-audit is not installed"
   record DEPENDENCY_AUDIT NOT_RUN "pip-audit is not installed"
