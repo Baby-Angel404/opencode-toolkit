@@ -76,12 +76,15 @@ jobs:
         # pipeline status below has to survive a failing pytest run.
         shell: bash
         run: |
-          set -o pipefail
+          # GitHub injects `set -eo pipefail` into every bash step, which would
+          # abort on the failing pipeline before the annotations below could run.
+          set +e
           pytest --cov=opencode_toolkit --cov-report=term-missing --cov-report=xml \
             --cov-fail-under=80 2>&1 | tee test-output.txt
           # PIPESTATUS, not $?: $? here would be tee's status, which is 0 even
           # when pytest fails, and the step would pass on a red suite.
           status=${PIPESTATUS[0]}
+          set -e
           # Surface the failing test ids as annotations. Without this the only
           # record of *which* test failed is the raw log, which nobody reads.
           if [[ $status -ne 0 ]]; then
