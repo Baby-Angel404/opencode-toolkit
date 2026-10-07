@@ -1,8 +1,9 @@
 {
-  "id": "fix-windows-permission-assertions",
-  "type": "fixed",
   "area": "test",
-  "description": "Four tests asserted a 0600 file mode unconditionally. Windows has no POSIX mode bits, so stat.S_IMODE reports 0o666 for every writable file and the owner-only guarantee does not exist there; they now skip on nt with that stated as the reason. The guarantee is documented as POSIX-only in the security model.",
   "breaking": false,
-  "issue": ""
+  "description": "Four tests asserted a 0600 file mode unconditionally. Windows has no POSIX mode bits, so stat.S_IMODE reports 0o666 for every writable file and the owner-only guarantee does not exist there; they now skip on nt with that stated as the reason. The guarantee is documented as POSIX-only in the security model.",
+  "id": "fix-windows-permission-assertions",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
 }

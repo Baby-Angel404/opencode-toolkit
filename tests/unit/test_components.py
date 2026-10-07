@@ -1561,3 +1561,29 @@ def test_artifact_verification_detects_tampering(tmp_path: Path) -> None:
     assert not result["ok"]
     assert result["mismatched"]
     del sha256_file
+
+
+def test_every_repository_changelog_fragment_is_valid() -> None:
+    """The release step renders CHANGELOG.md from these, and it must not fail.
+
+    A fragment written by hand instead of `write_fragment` is missing the
+    `kind: opencode-toolkit/changelog-fragment` discriminator, and the loader
+    rejects it. Six of them did, which 619 green tests did not notice: nothing
+    loaded the repository's own fragments, so the release failed at
+    "Generate the changelog" after the gate had approved and the artefacts were
+    already built.
+    """
+    from opencode_toolkit.release.changelog import changelog_release, load_fragments
+
+    root = Path(__file__).resolve().parents[2]
+    fragments = load_fragments(root)
+
+    assert fragments, "the pending release has recorded fragments"
+    for fragment in fragments:
+        assert fragment.kind in {"added", "changed", "deprecated", "removed", "fixed", "security"}
+        assert fragment.description.strip(), fragment.id
+        assert fragment.area.strip(), fragment.id
+
+    # And the rendering the release step performs must actually work.
+    rendered = changelog_release(fragments, "9.9.9")
+    assert "## 9.9.9" in rendered

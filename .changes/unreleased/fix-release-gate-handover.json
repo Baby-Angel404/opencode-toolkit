@@ -1,8 +1,9 @@
 {
-  "id": "fix-release-gate-handover",
-  "type": "fixed",
   "area": "ci",
-  "description": "The release gate is stored outside version control on purpose, since it records a verdict about one commit rather than a fact about the repository. The release job therefore started with no gate at all and preflight refused to build. It now takes the approved gate from the validate job's artefact and refuses it unless the recorded commit is the commit being released, so a stale artefact cannot authorise a release.",
   "breaking": false,
-  "issue": ""
+  "description": "The release gate is stored outside version control on purpose, since it records a verdict about one commit rather than a fact about the repository. The release job therefore started with no gate at all and preflight refused to build. It now takes the approved gate from the validate job's artefact and refuses it unless the recorded commit is the commit being released, so a stale artefact cannot authorise a release.",
+  "id": "fix-release-gate-handover",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
 }
