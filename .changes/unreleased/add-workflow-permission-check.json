@@ -1,0 +1,9 @@
+{
+  "area": "ci",
+  "breaking": false,
+  "description": "scripts/security/workflow-permissions.py verifies that reusable-workflow calls grant at least the permissions their nested jobs request, catching startup failures before push.",
+  "id": "add-workflow-permission-check",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "added"
+}

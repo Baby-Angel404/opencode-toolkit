@@ -49,11 +49,11 @@ jobs:
           - os: windows-latest
             python-version: "3.14"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -76,7 +76,7 @@ jobs:
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage.xml
@@ -87,11 +87,11 @@ jobs:
     name: Build distributions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           cache: pip
@@ -106,7 +106,7 @@ jobs:
         run: ./scripts/test/clean-environment-check.sh
 
       - name: Upload distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: distributions
           path: dist/
@@ -117,11 +117,11 @@ jobs:
     name: Environment doctor
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -129,13 +129,18 @@ jobs:
 
       - name: doctor must report no failures
         run: |
-          python -m opencode_toolkit doctor --format json --strict > doctor.json
-          cat doctor.json
-          python - <<'PY'
+          # Written outside the checkout on purpose: doctor inspects the working
+          # tree, so an output file left in the repo root makes its own
+          # `git.clean` check warn and `--strict` turns that warning into the
+          # failure this step is meant to detect.
+          python -m opencode_toolkit doctor --format json --strict > "$RUNNER_TEMP/doctor.json"
+          cat "$RUNNER_TEMP/doctor.json"
+          DOCTOR_REPORT="$RUNNER_TEMP/doctor.json" python - <<'PY'
           import json
+          import os
           import sys
 
-          document = json.load(open("doctor.json"))
+          document = json.load(open(os.environ["DOCTOR_REPORT"]))
           failures = document["summary"]["failures"]
           if failures:
               print(f"::error::doctor reported {failures} failure(s)")

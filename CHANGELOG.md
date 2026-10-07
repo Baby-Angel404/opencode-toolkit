@@ -2,6 +2,23 @@
 
 All notable changes are recorded here as structured fragments under `.changes/unreleased/`.
 
+## 0.1.1 - 2026-10-08
+
+### Added
+
+* scripts/security/workflow-permissions.py verifies that reusable-workflow calls grant at least the permissions their nested jobs request, catching startup failures before push. (`ci`)
+
+### Changed
+
+* Pinned actions moved to their current majors: checkout v7, setup-python v7, upload-artifact v7, download-artifact v8, dependency-review v5, codeql-action v4, action-gh-release v3. (`ci`)
+
+### Fixed
+
+* The CI doctor step wrote its report into the checkout, so doctor's own git.clean check warned and --strict turned that warning into the failure being tested. (`ci`)
+* The history secret scan ignored the audit's configured exclusions and flagged the patch's own 40-hex commit headers, so a clean history reported leaks. (`security-audit`)
+* An installed wheel could not be imported outside a checkout of this repository: detect_version read pyproject.toml or raised, and a wheel ships no pyproject.toml. Distribution metadata is now the fallback. (`release`)
+* release.yml pinned contents: read while calling security.yml, whose audit and codeql jobs request security-events: write. Every tag push produced a release with zero jobs. (`ci`)
+* The SARIF relationship target carried a description and a non-UUID guid, so GitHub rejected the whole file as invalid and code scanning never received any results. (`security-audit`)
 ## 0.1.0 - 2026-10-08
 
 No changes recorded for this release.

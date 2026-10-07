@@ -1,0 +1,9 @@
+{
+  "area": "security-audit",
+  "breaking": false,
+  "description": "The SARIF relationship target carried a description and a non-UUID guid, so GitHub rejected the whole file as invalid and code scanning never received any results.",
+  "id": "fix-sarif-relationship-schema",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

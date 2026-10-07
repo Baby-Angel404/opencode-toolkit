@@ -1,0 +1,9 @@
+{
+  "area": "ci",
+  "breaking": false,
+  "description": "Pinned actions moved to their current majors: checkout v7, setup-python v7, upload-artifact v7, download-artifact v8, dependency-review v5, codeql-action v4, action-gh-release v3.",
+  "id": "bump-actions-to-current-majors",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "changed"
+}

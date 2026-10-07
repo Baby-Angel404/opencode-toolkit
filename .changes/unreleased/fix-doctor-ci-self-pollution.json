@@ -1,0 +1,9 @@
+{
+  "area": "ci",
+  "breaking": false,
+  "description": "The CI doctor step wrote its report into the checkout, so doctor's own git.clean check warned and --strict turned that warning into the failure being tested.",
+  "id": "fix-doctor-ci-self-pollution",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

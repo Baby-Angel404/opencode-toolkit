@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opencode-toolkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "Unified OpenCode engineering toolkit: security audit, workflow sync, verified snippets, multi-agent orchestration, offline packs and live documentation."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -117,7 +117,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # The security test suite and the scanner fixtures contain realistic *fake*
 # credentials; flagging them would make the real findings unreadable.
-"tests/**" = ["S105", "S106", "S307", "S311", "S324", "S501", "ARG001", "ARG002", "ARG005"]
+"tests/**" = ["S105", "S106", "S307", "S311", "S324", "S501", "S603", "ARG001", "ARG002", "ARG005"]
 # Shell scripts drive a fixed argv with no user input, and call out to the
 # interpreter and container runtime by name.
 "scripts/**" = ["S603", "S607"]

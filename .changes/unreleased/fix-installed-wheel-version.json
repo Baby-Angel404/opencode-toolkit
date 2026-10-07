@@ -1,0 +1,9 @@
+{
+  "area": "release",
+  "breaking": false,
+  "description": "An installed wheel could not be imported outside a checkout of this repository: detect_version read pyproject.toml or raised, and a wheel ships no pyproject.toml. Distribution metadata is now the fallback.",
+  "id": "fix-installed-wheel-version",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

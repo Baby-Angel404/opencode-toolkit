@@ -1,0 +1,9 @@
+{
+  "area": "ci",
+  "breaking": false,
+  "description": "release.yml pinned contents: read while calling security.yml, whose audit and codeql jobs request security-events: write. Every tag push produced a release with zero jobs.",
+  "id": "fix-release-startup-failure",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

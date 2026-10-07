@@ -173,22 +173,33 @@ def render_sarif(result: ScanResult, *, stream: TextIO) -> None:
                 "help": {"text": (rule.remediation if rule else finding.remediation)[:4000]},
                 "defaultConfiguration": {"level": SARIF_LEVEL[finding.severity]},
                 "properties": {
-                    "tags": ["security", *(rule.references if rule else ())],
+                    # GitHub code scanning reads CWE from the
+                    # `external/cwe/cwe-n` tag convention, not from the
+                    # relationships block, so both forms are emitted.
+                    "tags": [
+                        "security",
+                        *(
+                            [
+                                tag
+                                if tag.startswith("external/")
+                                else f"external/cwe/{tag.lower()}"
+                                for tag in (rule.references if rule else ())
+                            ]
+                        ),
+                    ],
                     "problem.severity": finding.severity.value,
                     "confidence": finding.confidence.value,
                     **({"security-severity": _security_severity(finding.severity)} if rule else {}),
                 },
             }
             if rule is not None and rule.cwe:
-                descriptor["relationships"] = [
-                    {
-                        "target": {
-                            "id": rule.cwe,
-                            "guid": f"CWE-{rule.cwe}",
-                            "description": {"text": f"See {rule.cwe}"},
-                        }
-                    }
-                ]
+                # `reportingDescriptorReference` allows only id, guid, index and
+                # toolComponent. The previous `guid: "CWE-CWE-16"` and its
+                # `description` made GitHub reject the whole file with "not valid
+                # SARIF", which cost us code scanning entirely. The CWE also
+                # travels as a tag, which is the form code scanning actually
+                # reads, so nothing is lost by keeping the reference minimal.
+                descriptor["relationships"] = [{"target": {"id": rule.cwe}}]
             rules[finding.rule_id] = descriptor
 
         results.append(

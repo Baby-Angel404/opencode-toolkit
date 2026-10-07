@@ -458,3 +458,55 @@ def test_sarif_empty_tree_is_still_valid(tmp_path: Path) -> None:
     render_sarif(scan_path(tmp_path), stream=stream)
     document = json.loads(stream.getvalue())
     assert document["runs"][0]["results"] == []
+
+
+@pytest.mark.regression
+def test_sarif_relationships_are_schema_valid(tmp_path: Path) -> None:
+    """GitHub rejects the whole upload when one rule target is off-schema.
+
+    Code scanning answered "not valid SARIF" for `guid: "CWE-CWE-16"` and a
+    `description` on the relationship target, which silently cost us code
+    scanning while the audit itself reported a clean result. The target type
+    `reportingDescriptorReference` permits only id, guid, index and
+    toolComponent, and any guid must be a real UUID.
+    """
+    import re
+
+    (tmp_path / "app.py").write_text('PASSWORD = "hunter2secretvalue"\n', encoding="utf-8")
+    stream = io.StringIO()
+    render_sarif(scan_path(tmp_path), stream=stream)
+    document = json.loads(stream.getvalue())
+
+    uuid_pattern = re.compile(
+        r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}"
+        r"-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    )
+    allowed = {"id", "guid", "index", "toolComponent"}
+
+    rules = document["runs"][0]["tool"]["driver"]["rules"]
+    assert rules, "the credential fixture must produce at least one rule"
+    checked = 0
+    for rule in rules:
+        for relationship in rule.get("relationships", []):
+            target = relationship["target"]
+            assert set(target) <= allowed, f"{rule['id']}: {set(target) - allowed}"
+            if "guid" in target:
+                assert uuid_pattern.match(target["guid"]), target["guid"]
+            checked += 1
+    assert checked, "no relationship was emitted, so this test proves nothing"
+
+
+@pytest.mark.regression
+def test_sarif_carries_cwe_in_the_tag_form_code_scanning_reads(tmp_path: Path) -> None:
+    """GitHub maps findings to CWE from `external/cwe/cwe-n` tags."""
+    (tmp_path / "app.py").write_text('PASSWORD = "hunter2secretvalue"\n', encoding="utf-8")
+    stream = io.StringIO()
+    render_sarif(scan_path(tmp_path), stream=stream)
+    document = json.loads(stream.getvalue())
+
+    tags = [
+        tag
+        for rule in document["runs"][0]["tool"]["driver"]["rules"]
+        for tag in rule["properties"]["tags"]
+    ]
+    assert any(tag.startswith("external/cwe/cwe-") for tag in tags), tags
