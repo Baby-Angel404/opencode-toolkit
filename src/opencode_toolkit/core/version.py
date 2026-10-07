@@ -15,6 +15,8 @@ from typing import Final
 
 from opencode_toolkit.core.errors import ConfigurationError
 
+DISTRIBUTION_NAME: Final = "opencode-toolkit"
+
 _SEMVER_RE: Final = re.compile(
     r"^(?P<major>0|[1-9]\d*)"
     r"\.(?P<minor>0|[1-9]\d*)"
@@ -132,25 +134,59 @@ def _version_from_pyproject(path: Path) -> str:
     raise ConfigurationError("pyproject.toml does not declare [project] version")
 
 
+def _version_from_metadata() -> str | None:
+    """Return the version of the installed distribution, if it is installed.
+
+    ``pyproject.toml`` only exists inside a checkout. Once the wheel is
+    installed there is no ``pyproject.toml`` anywhere, so reading it alone makes
+    ``import opencode_toolkit`` raise on every machine that did not clone the
+    repository -- which is every consumer of the published artifact.
+
+    Returns:
+        str | None: The version recorded in the installed distribution
+            metadata, or ``None`` when the package is not installed.
+    """
+    try:
+        from importlib.metadata import PackageNotFoundError
+        from importlib.metadata import version as _dist_version
+    except ImportError:  # pragma: no cover - Python < 3.8 only
+        return None
+    try:
+        return _dist_version(DISTRIBUTION_NAME)
+    except PackageNotFoundError:
+        return None
+
+
 def detect_version(root: Path | None = None) -> Version:
-    """Return the project version declared in ``pyproject.toml``.
+    """Return the project version.
+
+    ``pyproject.toml`` wins when it is reachable, so editing the version in a
+    checkout takes effect immediately without reinstalling. Distribution
+    metadata is the fallback for an installed wheel, which ships no
+    ``pyproject.toml`` at all.
 
     Args:
         root: Path | None: Directory holding ``pyproject.toml``; defaults to the
             repository root located by :func:`project_root`.
 
     Raises:
-        ConfigurationError: ``pyproject.toml`` is absent, declares no
-            ``[project]`` version, or declares one that is not valid semver.
+        ConfigurationError: The version is not discoverable, is missing from
+            ``pyproject.toml``, or is not valid semver.
     """
     base = root or project_root()
     pyproject = base / "pyproject.toml"
-    if not pyproject.is_file():
-        raise ConfigurationError(
-            "pyproject.toml not found; cannot determine the project version",
-            details={"searched_from": str(base)},
-        )
-    return Version.parse(_version_from_pyproject(pyproject))
+    if pyproject.is_file():
+        return Version.parse(_version_from_pyproject(pyproject))
+
+    installed = _version_from_metadata()
+    if installed:
+        return Version.parse(installed)
+
+    raise ConfigurationError(
+        "cannot determine the project version: no pyproject.toml in "
+        f"{base} and no installed distribution metadata",
+        details={"searched_from": str(base), "distribution": DISTRIBUTION_NAME},
+    )
 
 
 __version__: str = str(detect_version())

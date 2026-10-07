@@ -506,3 +506,40 @@ def test_timestamps_sort_lexicographically() -> None:
     assert parse_timestamp(stamp).tzinfo is not None
     assert to_stamp("2026-01-02T03:04:05Z") == "20260102T030405Z"
     assert to_stamp("2026-01-02T03:04:05Z") < to_stamp("2026-01-02T03:04:06Z")
+
+
+def test_detect_version_falls_back_to_installed_metadata(tmp_path: Path, monkeypatch) -> None:
+    """An installed wheel ships no pyproject.toml, so metadata is the fallback.
+
+    Without this, ``import opencode_toolkit`` raises ConfigurationError on every
+    machine that installed the package instead of cloning it, which is every
+    consumer of the published artifact.
+    """
+    from opencode_toolkit.core import version as version_module
+
+    monkeypatch.setattr(version_module, "_version_from_metadata", lambda: "9.8.7")
+
+    # A directory with no pyproject.toml, i.e. any cwd outside a checkout.
+    assert str(version_module.detect_version(tmp_path)) == "9.8.7"
+
+
+def test_detect_version_prefers_pyproject_over_metadata(tmp_path: Path, monkeypatch) -> None:
+    """Editing the version in a checkout must not require a reinstall."""
+    from opencode_toolkit.core import version as version_module
+
+    monkeypatch.setattr(version_module, "_version_from_metadata", lambda: "9.8.7")
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "opencode-toolkit"\nversion = "1.2.3"\n', encoding="utf-8"
+    )
+
+    assert str(version_module.detect_version(tmp_path)) == "1.2.3"
+
+
+def test_detect_version_errors_when_no_source_exists(tmp_path: Path, monkeypatch) -> None:
+    from opencode_toolkit.core import version as version_module
+    from opencode_toolkit.core.errors import ConfigurationError
+
+    monkeypatch.setattr(version_module, "_version_from_metadata", lambda: None)
+
+    with pytest.raises(ConfigurationError):
+        version_module.detect_version(tmp_path)

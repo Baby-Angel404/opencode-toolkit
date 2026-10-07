@@ -32,6 +32,11 @@ jobs:
   audit:
     name: Static security audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Uploading SARIF writes to code scanning. Without this the job fails at
+      # the upload step, which reads as "the audit broke" when the audit passed.
+      security-events: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,7 +97,10 @@ jobs:
           python-version: "3.13"
           cache: pip
           cache-dependency-path: requirements-dev.txt
-      - run: python -m pip install --upgrade pip && python -m pip install pip-audit
+      # The package itself must be importable: the closure check below shells
+      # out to `python -m opencode_toolkit`, and without this the module is not
+      # found and the step dies on an empty JSON file.
+      - run: python -m pip install --upgrade pip && python -m pip install pip-audit && python -m pip install .
 
       - name: Audit the development tool chain
         run: |
@@ -100,8 +108,11 @@ jobs:
             || { echo "::error::a known vulnerability was found in the tool chain"; exit 1; }
 
       - name: Confirm the runtime closure is empty
+        # No `|| true` here. Unlike the audit, this command has no severity
+        # threshold to exceed, so any non-zero exit is a real failure and must
+        # not be papered over into a confusing empty-JSON traceback.
         run: |
-          python -m opencode_toolkit --format json release sbom --summary > summary.json || true
+          python -m opencode_toolkit --format json release sbom --summary > summary.json
           python - <<'PY'
           import json
 
@@ -144,17 +155,44 @@ jobs:
         run: |
           git log --all -p --no-color > /tmp/opencode-history.patch
           python - <<'PY'
+          import fnmatch
           import re
-          import sys
 
+          from opencode_toolkit.core.config import load_config
+          from opencode_toolkit.core.paths import resolve_layout
           from opencode_toolkit.core.redact import fingerprint, is_allowlisted
           from opencode_toolkit.publishing.artifacts import SECRET_PATTERNS
 
           patterns = [(re.compile(pattern), kind) for pattern, kind in SECRET_PATTERNS]
+          excluded = tuple(
+              load_config(resolve_layout()).security_audit.exclude_paths
+          )
+
+          def is_excluded(label):
+              return any(
+                  fnmatch.fnmatch(label, pattern) or label.endswith(pattern)
+                  for pattern in excluded
+              )
+
+          # A `git log -p` patch is full of lines that look like findings but are
+          # not content: its own commit headers carry 40-hex SHA-1 strings, and
+          # every diff index line is a hex pair. Scanning them guarantees noise
+          # and teaches the reader that the scan is unreliable.
+          METADATA = ("commit ", "index ", "Author:", "Date: ", "diff --git ", "new file mode",
+                      "deleted file mode", "old mode ", "new mode ", "similarity index",
+                      "rename from", "rename to", "Binary files ")
+
+          current = ""
           hits = 0
           with open("/tmp/opencode-history.patch", encoding="utf-8", errors="replace") as handle:
               for number, line in enumerate(handle, 1):
-                  if line.startswith(("+++", "---")):
+                  if line.startswith("+++ "):
+                      target = line[4:].strip().split("\t")[0]
+                      current = "" if target == "/dev/null" else target[2:] if target.startswith("b/") else target
+                      continue
+                  if line.startswith("--- ") or line.startswith(METADATA):
+                      continue
+                  if is_excluded(current):
                       continue
                   for pattern, kind in patterns:
                       for match in pattern.finditer(line):
