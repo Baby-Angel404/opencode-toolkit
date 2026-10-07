@@ -1,0 +1,9 @@
+{
+  "area": "release",
+  "breaking": false,
+  "description": "Artefact verification only re-hashed what a build had recorded, so a build that silently lost the wheel verified clean and printed RESULT: VERIFIED for a set with no wheel in it. Verification now also confirms every required kind was produced. It has to distinguish an explicit opt-out from a silent loss, so the required kinds are chosen by the build, persisted in artifacts.json, and a FAILED build step is fatal while a SKIPPED one is not.",
+  "id": "fix-artifact-completeness-check",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from opencode_toolkit.cli.context import JSON, CliContext, emit_json
 from opencode_toolkit.core import exit_codes
@@ -276,6 +277,21 @@ def _cmd_artifacts(context: CliContext, args: argparse.Namespace) -> int:
     return exit_codes.OK if payload["verification"]["ok"] else exit_codes.INTEGRITY
 
 
+def _required_kinds_from_index(document: dict[str, Any]) -> tuple[str, ...]:
+    """Read the required kinds from a build index, falling back to all of them.
+
+    An index written before this field existed is read as a complete release,
+    which is the conservative direction: it can fail a partial build, never pass
+    an incomplete one.
+    """
+    from opencode_toolkit.release.artifacts import REQUIRED_ARTIFACT_KINDS
+
+    recorded = document.get("required_kinds")
+    if not isinstance(recorded, list) or not all(isinstance(item, str) for item in recorded):
+        return REQUIRED_ARTIFACT_KINDS
+    return tuple(recorded)
+
+
 def _cmd_verify_artifacts(context: CliContext, args: argparse.Namespace) -> int:
     from opencode_toolkit.core import jsonio
     from opencode_toolkit.release.artifacts import Artifact, ArtifactSet
@@ -306,6 +322,8 @@ def _cmd_verify_artifacts(context: CliContext, args: argparse.Namespace) -> int:
             )
             for item in document.get("artifacts", [])
         ],
+        build_log=list(document.get("build_log", [])),
+        required_kinds=_required_kinds_from_index(document),
     )
     payload = verify_artifacts(rebuilt)
     if context.output_format == JSON:
@@ -316,6 +334,10 @@ def _cmd_verify_artifacts(context: CliContext, args: argparse.Namespace) -> int:
             print(f"  MISSING    {name}", file=context.stdout)
         for name in payload["mismatched"]:
             print(f"  MISMATCHED {name}", file=context.stdout)
+        for kind in payload["missing_kinds"]:
+            print(f"  ABSENT     no artefact of kind {kind!r} was ever built", file=context.stdout)
+        for line in payload["failed_build_steps"]:
+            print(f"  BUILD LOG  {line}", file=context.stdout)
         print(f"RESULT: {'VERIFIED' if payload['ok'] else 'FAILED'}", file=context.stdout)
     return exit_codes.OK if payload["ok"] else exit_codes.INTEGRITY
 

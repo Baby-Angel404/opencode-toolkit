@@ -1587,3 +1587,137 @@ def test_every_repository_changelog_fragment_is_valid() -> None:
     # And the rendering the release step performs must actually work.
     rendered = changelog_release(fragments, "9.9.9")
     assert "## 9.9.9" in rendered
+
+
+def test_verify_rejects_a_build_that_skipped_the_wheel(tmp_path: Path) -> None:
+    """Verification used to prove nothing about completeness.
+
+    `python -m build` exits non-zero rather than raising when it is missing, so
+    `_build_wheel` logged SKIPPED, returned None, and the build carried on. Every
+    recorded digest still matched, so `RESULT: VERIFIED` was printed for an
+    artefact set containing no wheel at all -- and the release only failed much
+    later, in the upload step.
+    """
+    from opencode_toolkit.core.fsio import sha256_file
+    from opencode_toolkit.release.artifacts import Artifact, ArtifactSet, verify_artifacts
+
+    present = tmp_path / "sbom.cdx.json"
+    present.write_text("{}", encoding="utf-8")
+    incomplete = ArtifactSet(
+        version=Version(1, 0, 0),
+        directory=tmp_path,
+        artifacts=[
+            Artifact(
+                name="sbom.cdx.json",
+                path=present,
+                size=present.stat().st_size,
+                sha256=sha256_file(present),
+                kind="sbom",
+            )
+        ],
+        build_log=["SKIPPED: wheel build -- python -m build is not installed"],
+    )
+
+    payload = verify_artifacts(incomplete)
+    assert payload["ok"] is False
+    assert "wheel" in payload["missing_kinds"]
+
+
+def test_verify_reports_a_failed_build_step(tmp_path: Path) -> None:
+    """A build that logged FAILED is not a verified build, whatever it produced."""
+    from opencode_toolkit.core.fsio import sha256_file
+    from opencode_toolkit.release.artifacts import (
+        REQUIRED_ARTIFACT_KINDS,
+        Artifact,
+        ArtifactSet,
+        verify_artifacts,
+    )
+
+    built = []
+    for kind in REQUIRED_ARTIFACT_KINDS:
+        path = tmp_path / f"{kind}.bin"
+        path.write_bytes(kind.encode())
+        built.append(
+            Artifact(
+                name=path.name,
+                path=path,
+                size=path.stat().st_size,
+                sha256=sha256_file(path),
+                kind=kind,
+            )
+        )
+    degraded = ArtifactSet(
+        version=Version(1, 0, 0),
+        directory=tmp_path,
+        artifacts=built,
+        build_log=["FAILED: wheel build exited 1: No module named build"],
+    )
+
+    payload = verify_artifacts(degraded)
+    assert payload["missing_kinds"] == []
+    assert payload["failed_build_steps"]
+    assert payload["ok"] is False
+
+
+def test_an_explicit_opt_out_is_not_treated_as_missing(tmp_path: Path) -> None:
+    """`--no-wheel` asks for a partial build and must stay able to verify one.
+
+    The completeness rule has to be able to tell "not requested" from "silently
+    lost", or every partial build would fail and the flag would be useless.
+    """
+    from opencode_toolkit.core.fsio import sha256_file
+    from opencode_toolkit.release.artifacts import Artifact, ArtifactSet, verify_artifacts
+
+    path = tmp_path / "sbom.cdx.json"
+    path.write_text("{}", encoding="utf-8")
+    opted_out = ArtifactSet(
+        version=Version(1, 0, 0),
+        directory=tmp_path,
+        artifacts=[
+            Artifact(
+                name=path.name,
+                path=path,
+                size=path.stat().st_size,
+                sha256=sha256_file(path),
+                kind="sbom",
+            )
+        ],
+        build_log=["SKIPPED: wheel build -- skipped by request"],
+        required_kinds=("sbom",),
+    )
+
+    payload = verify_artifacts(opted_out)
+    assert payload["ok"] is True
+    assert payload["missing_kinds"] == []
+    assert payload["failed_build_steps"] == []
+
+
+def test_verify_accepts_a_complete_release_set(tmp_path: Path) -> None:
+    from opencode_toolkit.core.fsio import sha256_file
+    from opencode_toolkit.release.artifacts import (
+        REQUIRED_ARTIFACT_KINDS,
+        Artifact,
+        ArtifactSet,
+        verify_artifacts,
+    )
+
+    built = []
+    for kind in REQUIRED_ARTIFACT_KINDS:
+        path = tmp_path / f"{kind}.bin"
+        path.write_bytes(kind.encode())
+        built.append(
+            Artifact(
+                name=path.name,
+                path=path,
+                size=path.stat().st_size,
+                sha256=sha256_file(path),
+                kind=kind,
+            )
+        )
+    complete = ArtifactSet(
+        version=Version(1, 0, 0), directory=tmp_path, artifacts=built, build_log=["ok"]
+    )
+
+    payload = verify_artifacts(complete)
+    assert payload["ok"] is True
+    assert payload["missing_kinds"] == []

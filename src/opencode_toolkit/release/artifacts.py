@@ -66,6 +66,21 @@ class Artifact:
         }
 
 
+#: A release is not a release without these. Verification used to compare only
+#: what a build happened to record, so a build that silently skipped the wheel
+#: verified clean: the digests of the four surviving files all matched and the run
+#: reported RESULT: VERIFIED on an artefact set with no wheel in it. The build
+#: logs "SKIPPED" and carries on precisely because ``python -m build`` exits
+#: non-zero rather than raising when it is missing.
+REQUIRED_ARTIFACT_KINDS: tuple[str, ...] = (
+    "wheel",
+    "source-archive",
+    "offline-pack",
+    "sbom",
+    "documentation",
+)
+
+
 @dataclass(slots=True)
 class ArtifactSet:
     """Everything produced by one release build."""
@@ -74,6 +89,11 @@ class ArtifactSet:
     directory: Path
     artifacts: list[Artifact] = field(default_factory=list)
     build_log: list[str] = field(default_factory=list)
+    #: Kinds this build was supposed to produce. Excludes anything the caller
+    #: explicitly opted out of, so verification can tell "not requested" from
+    #: "silently missing" -- the difference between a legitimate partial build
+    #: and a release that quietly lost its wheel.
+    required_kinds: tuple[str, ...] = REQUIRED_ARTIFACT_KINDS
 
     def add(self, artifact: Artifact) -> Artifact:
         """Append *artifact* and return it, so callers can inline construction.
@@ -119,6 +139,10 @@ class ArtifactSet:
                 artifact.to_dict() for artifact in sorted(self.artifacts, key=lambda a: a.name)
             ],
             "build_log": list(self.build_log),
+            # Persisted, not recomputed: `verify-artifacts` rebuilds the set from
+            # this index in a fresh process, and a default would quietly
+            # re-require a wheel the build was told not to produce.
+            "required_kinds": list(self.required_kinds),
         }
 
 
@@ -144,7 +168,12 @@ def build_artifacts(
     root = root.resolve()
     output = ensure_dir(output)
     resolved = version or detect_version(root)
-    artifacts = ArtifactSet(version=resolved, directory=output)
+    required = list(REQUIRED_ARTIFACT_KINDS)
+    if skip_python_build:
+        required.remove("wheel")
+    if not include_pack:
+        required.remove("offline-pack")
+    artifacts = ArtifactSet(version=resolved, directory=output, required_kinds=tuple(required))
 
     source_archive = output / SDIST_NAME
     _build_sdist(root, source_archive)
@@ -353,7 +382,11 @@ def _build_doc_bundle(root: Path, target: Path) -> None:
 
 
 def verify_artifacts(artifacts: ArtifactSet) -> dict[str, Any]:
-    """Re-read every artefact and confirm its recorded digest still matches.
+    """Re-read every artefact, confirm its digest, and confirm nothing is absent.
+
+    Two different questions, both needed. *Did what we built stay intact?* is
+    answered by re-hashing. *Did we build everything a release needs?* was not
+    answered at all, which let an incomplete build pass as verified.
 
     Args:
         artifacts: ArtifactSet: The recorded build to re-check against the files on disk.
@@ -366,10 +399,22 @@ def verify_artifacts(artifacts: ArtifactSet) -> dict[str, Any]:
             continue
         if sha256_file(artifact.path) != artifact.sha256:
             mismatched.append(artifact.name)
+
+    absent_kinds = [
+        kind
+        for kind in artifacts.required_kinds
+        if not any(artifact.kind == kind for artifact in artifacts.artifacts)
+    ]
+    # Only FAILED is fatal. SKIPPED is how an explicit opt-out is recorded, and
+    # that kind is already dropped from required_kinds; a *silent* skip leaves
+    # the kind required, which is what absent_kinds catches.
+    failed_builds = [line for line in artifacts.build_log if line.startswith("FAILED")]
     return {
-        "ok": not mismatched and not missing,
+        "ok": not mismatched and not missing and not absent_kinds and not failed_builds,
         "missing": missing,
         "mismatched": mismatched,
+        "missing_kinds": absent_kinds,
+        "failed_build_steps": failed_builds,
         "checked": len(artifacts.artifacts),
         "checked_at": utc_now(),
     }
