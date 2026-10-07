@@ -229,6 +229,14 @@ jobs:
       - name: Verify the published release
         # A created release is not a verified release. Re-read it over the API
         # and re-hash the uploaded assets.
+        #
+        # `gh` reads its credentials from the environment, not from the ambient
+        # GITHUB_TOKEN: `contents: write` grants the permission but exports
+        # nothing. Without GH_TOKEN the step dies on "To get started with GitHub
+        # CLI, please run: gh auth login" -- after the release was already
+        # published, so the run is red and the verification never happens.
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           gh release view "${GITHUB_REF_NAME}" --json tagName,name,isDraft,isPrerelease,assets > release.json

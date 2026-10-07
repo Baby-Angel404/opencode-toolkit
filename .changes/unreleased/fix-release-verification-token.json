@@ -1,0 +1,9 @@
+{
+  "area": "ci",
+  "breaking": false,
+  "description": "The step that re-reads the published release over the API had no GH_TOKEN, so gh refused to authenticate and the run went red after the release was already live. contents: write grants the permission but exports no credential; gh reads the environment.",
+  "id": "fix-release-verification-token",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}
