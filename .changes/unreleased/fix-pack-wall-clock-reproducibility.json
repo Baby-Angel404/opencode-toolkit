@@ -1,0 +1,9 @@
+{
+  "area": "offline-pack",
+  "breaking": false,
+  "description": "The pack manifest recorded utc_now(), so two builds matched only when they landed in the same second. The pack advertises byte-reproducibility and the release gate checks it, but a build that straddled a second boundary failed at random with two archives whose listings looked identical -- macOS runners, being slower, hit it first. The build now uses a reproducible clock that honours SOURCE_DATE_EPOCH and otherwise a fixed epoch.",
+  "id": "fix-pack-wall-clock-reproducibility",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

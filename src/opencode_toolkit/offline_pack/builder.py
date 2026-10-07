@@ -20,7 +20,7 @@ from opencode_toolkit.core.config import PackPolicy
 from opencode_toolkit.core.errors import UsageError
 from opencode_toolkit.core.fsio import sha256_bytes
 from opencode_toolkit.core.pyproject import read_pyproject_requirements
-from opencode_toolkit.core.timeutil import utc_now
+from opencode_toolkit.core.timeutil import reproducible_timestamp
 from opencode_toolkit.core.version import Version, detect_version
 from opencode_toolkit.offline_pack.licenses import (
     distribution_licence,
@@ -397,7 +397,7 @@ class PackBuilder:
         manifest = PackManifest(
             name=archive_name or f"opencode-toolkit-{self.version}",
             version=str(self.version),
-            created_at=utc_now(),
+            created_at=reproducible_timestamp(),
             entries=entries,
             components=selected,
             excluded=excluded,
@@ -600,7 +600,7 @@ def update_manifest(archive: Path, output: Path) -> BuildResult:
     refreshed = PackManifest(
         name=manifest.name,
         version=manifest.version,
-        created_at=utc_now(),
+        created_at=reproducible_timestamp(),
         entries=manifest.entries,
         components=manifest.components,
         excluded=manifest.excluded,

@@ -1,9 +1,9 @@
 {
   "counts": {
     "class": 99,
-    "function": 418,
+    "function": 419,
     "partial": 1,
-    "total": 517,
+    "total": 518,
     "undocumented": 11
   },
   "items": [
@@ -4248,6 +4248,16 @@
       "qualified_name": "render_text",
       "returns": "None",
       "signature": "def render_text(result: ScanResult, stream: TextIO, colour: bool = False, verbose: bool = False, max_findings: int | None = None) -> None"
+    },
+    {
+      "file": "opencode_toolkit/core/timeutil.py",
+      "kind": "function",
+      "parameters": [
+        "environ"
+      ],
+      "qualified_name": "reproducible_timestamp",
+      "returns": "str",
+      "signature": "def reproducible_timestamp(environ: dict[str, str] | None = None) -> str"
     },
     {
       "file": "opencode_toolkit/core/paths.py",

@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -1721,3 +1722,69 @@ def test_verify_accepts_a_complete_release_set(tmp_path: Path) -> None:
     payload = verify_artifacts(complete)
     assert payload["ok"] is True
     assert payload["missing_kinds"] == []
+
+
+@pytest.mark.regression
+def test_pack_bytes_do_not_depend_on_the_wall_clock(pack_root: Path, tmp_path: Path) -> None:
+    """A pack must be the same bytes whatever time it was built.
+
+    The manifest carried `utc_now()`, which has one-second resolution, so two
+    builds matched only when they landed in the same second. That is nearly
+    always true, which is worse than never: the pack advertises
+    byte-reproducibility, the release gate checks it, and a build that
+    straddled a second boundary failed at random with two archives whose
+    listings looked identical. Slower runners, macOS among them, hit it first.
+
+    Instead of trying to straddle a boundary by timing, the wall clock is made
+    to return a different value on every call. If anything in the build still
+    reads it, the two archives cannot match.
+    """
+    import opencode_toolkit.core.timeutil as timeutil
+
+    # The clock itself, not the helper: `from ... import utc_now` binds the name
+    # at import time, so patching the module attribute would miss a caller that
+    # already holds it. Anything that still reads the wall clock gets a
+    # different answer every time, which is what makes the archives differ.
+    moments = [
+        datetime(2026, 1, 2, 3, 4, 5, tzinfo=timezone.utc),
+        datetime(2031, 9, 28, 13, 37, 0, tzinfo=timezone.utc),
+        datetime(1999, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
+    ]
+    remaining = iter(moments)
+
+    class _AdversarialClock:
+        @staticmethod
+        def now(tz=None):  # noqa: ARG004 - mirrors datetime.now's signature
+            return next(remaining)
+
+    original = timeutil.datetime
+    timeutil.datetime = _AdversarialClock
+    try:
+        builder = PackBuilder(pack_root, version=Version(1, 0, 0))
+        first = builder.build(output=tmp_path / "one.zip")
+        second = builder.build(output=tmp_path / "two.zip")
+    finally:
+        timeutil.datetime = original
+
+    assert first.archive.read_bytes() == second.archive.read_bytes()
+    assert first.manifest.created_at == second.manifest.created_at
+
+
+def test_the_pack_manifest_records_the_reproducible_epoch(pack_root: Path, tmp_path: Path) -> None:
+    from opencode_toolkit.core.timeutil import REPRODUCIBLE_EPOCH
+
+    builder = PackBuilder(pack_root, version=Version(1, 0, 0))
+    built = builder.build(output=tmp_path / "pack.zip")
+
+    assert built.manifest.created_at == REPRODUCIBLE_EPOCH
+
+
+def test_the_pack_clock_ignores_the_wall_clock(tmp_path: Path) -> None:
+    """`SOURCE_DATE_EPOCH` pins the build; without it a fixed epoch is used."""
+    from opencode_toolkit.core.timeutil import reproducible_timestamp
+
+    assert reproducible_timestamp({}) == reproducible_timestamp({})
+    pinned = reproducible_timestamp({"SOURCE_DATE_EPOCH": "1767225600"})
+    assert pinned == "2026-01-01T00:00:00Z"
+    # A malformed hint must not fail a build.
+    assert reproducible_timestamp({"SOURCE_DATE_EPOCH": "not-a-number"})
