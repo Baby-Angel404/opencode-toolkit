@@ -82,6 +82,28 @@ DEFAULT_ALLOWLIST: tuple[str, ...] = (
     "SECURITY.md",
 )
 
+#: Allow-list for a *release* bundle, as published to Kaggle.
+#:
+#: :data:`DEFAULT_ALLOWLIST` mirrors the repository, which is right when the
+#: destination is a code host. It is wrong for a dataset page: staging it put
+#: 149 files on the card, 130-odd of them "Supporting file", along with
+#: ``src/opencode_toolkit.egg-info`` build metadata that has no business being
+#: published. The source is already inside the sdist, so the bundle carries the
+#: documentation and nothing else; the release artefacts are added afterwards by
+#: name, because ``dist/*`` is excluded and a build directory called ``dist`` has
+#: no business appearing on a dataset page.
+RELEASE_ALLOWLIST: tuple[str, ...] = (
+    "docs/*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "CITATION.cff",
+)
+
+
 #: Patterns that indicate a real credential in a text file.
 SECRET_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"-----BEGIN\s+(?:RSA|DSA|EC|OPENSSH|PGP|ENCRYPTED)?\s*PRIVATE KEY-----", "private_key"),
@@ -183,8 +205,7 @@ def is_excluded(relative: str) -> bool:
     """Return ``True`` when *relative* matches an exclusion pattern.
 
     Args:
-        relative: str: Path relative to the source root, in POSIX form, matched
-            with :mod:`fnmatch` against :data:`EXCLUDED_PATTERNS`.
+        relative: str: str: str: str: Path relative to the source root, in POSIX form, matched
     """
     return any(fnmatch.fnmatch(relative, pattern) for pattern in EXCLUDED_PATTERNS)
 
@@ -193,10 +214,8 @@ def is_allowed(relative: str, allowlist: Iterable[str]) -> bool:
     """Return ``True`` when *relative* matches the allow-list.
 
     Args:
-        relative: str: Path relative to the source root, in POSIX form, matched
-            with :mod:`fnmatch` against the patterns in *allowlist*.
-        allowlist: Iterable[str]: Glob patterns a file must match to be included;
-            every pattern that matches returns ``True``.
+        relative: str: str: str: str: Path relative to the source root, in POSIX form, matched
+        allowlist: Iterable[str]: Iterable[str]: Iterable[str]: Iterable[str]: Glob patterns a file must match to be included; every pattern that matches returns ``True``.
     """
     return any(fnmatch.fnmatch(relative, pattern) for pattern in allowlist)
 
@@ -213,12 +232,9 @@ def clean_publish_directory(
     run's leftovers cannot leak into an upload.
 
     Args:
-        source: Path: Existing directory to copy from; every path is read through
-            it, and its absence raises :class:`IntegrityError`.
-        destination: Path: Empty directory to write the artefact into. An existing
-            non-empty directory raises :class:`IntegrityError`.
-        allowlist: Iterable[str]: Glob patterns a file must match to be copied;
-            files matching no pattern are recorded as excluded and never written.
+        source: Path: Path: Path: Path: Existing directory to copy from; every path is read through it, and its absence raises :class:`IntegrityError`.
+        destination: Path: Path: Path: Path: Empty directory to write the artefact into. An existing non-empty directory raises :class:`IntegrityError`.
+        allowlist: Iterable[str]: Iterable[str]: Iterable[str]: Iterable[str]: Glob patterns a file must match to be copied; files matching no pattern are recorded as excluded and never written.
 
     Raises:
         IntegrityError: The source is missing, the destination is not empty, or
@@ -275,10 +291,8 @@ def scan_for_secrets(root: Path, *, skip_allowlist: Iterable[str] = ()) -> Secre
     """Scan every text file under *root* for credential-shaped content.
 
     Args:
-        root: Path: Directory to walk recursively; the directory itself is
-            resolved before scanning.
-        skip_allowlist: Iterable[str]: Relative paths to leave unscanned, in
-            addition to :data:`SCAN_EXCLUDED_DIRS` and :data:`EXCLUDED_PATTERNS`.
+        root: Path: Path: Path: Path: Directory to walk recursively; the directory itself is resolved before scanning.
+        skip_allowlist: Iterable[str]: Iterable[str]: Iterable[str]: Iterable[str]: Relative paths to leave unscanned, in addition to :data:`SCAN_EXCLUDED_DIRS` and :data:`EXCLUDED_PATTERNS`.
     """
     import re
 
@@ -340,9 +354,7 @@ def assert_clean(directory: Path) -> SecretScanReport:
     """Scan *directory* and raise when any credential-shaped content is found.
 
     Args:
-        directory: Path: Prepared publishing directory to scan. A hit raises
-            :class:`IntegrityError` carrying redacted evidence only -- the
-            matched text is never returned or logged.
+        directory: Path: Path: Path: Path: Prepared publishing directory to scan. A hit raises :class:`IntegrityError` carrying redacted evidence only -- the matched text is never returned or logged.
 
     Raises:
         IntegrityError: The scan found at least one hit.
@@ -362,8 +374,7 @@ def directory_digest(root: Path) -> str:
     """A single digest over every file's path and content, for the report.
 
     Args:
-        root: Path: Directory to digest; symlinks and directories are skipped, so
-            the value covers regular files only.
+        root: Path: Path: Path: Path: Directory to digest; symlinks and directories are skipped, so the value covers regular files only.
     """
     from opencode_toolkit.core.fsio import sha256_bytes
 

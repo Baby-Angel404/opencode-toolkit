@@ -646,3 +646,221 @@ def test_io_bytesio_is_used_for_deterministic_writes() -> None:
     buffer = io.BytesIO()
     buffer.write(b"payload")
     assert buffer.getvalue() == b"payload"
+
+
+# -- dataset card ---------------------------------------------------------
+
+
+def _bundle(tmp_path: Path, names: tuple[str, ...]) -> Path:
+    """Create a bundle directory holding *names*, each with a little content."""
+    directory = tmp_path / "staging"
+    directory.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        path = directory / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode())
+    return directory
+
+
+def test_dataset_card_lists_every_file_in_the_bundle(tmp_path: Path) -> None:
+    from opencode_toolkit.core.version import Version
+
+    directory = _bundle(
+        tmp_path,
+        (
+            "SHA256SUMS",
+            "artifacts.json",
+            "documentation.tar.gz",
+            "opencode_toolkit-1.2.3-py3-none-any.whl",
+            "opencode-toolkit-sdist.tar.gz",
+            "sbom.cdx.json",
+            "docs/security/model.md",
+        ),
+    )
+    card = kg.dataset_card(directory, version=Version(1, 2, 3), commit="abc123")
+
+    for name in (
+        "SHA256SUMS",
+        "artifacts.json",
+        "documentation.tar.gz",
+        "opencode_toolkit-1.2.3-py3-none-any.whl",
+        "sbom.cdx.json",
+        "docs/security/model.md",
+    ):
+        assert f"`{name}`" in card, name
+    assert card.startswith("# OpenCode Toolkit 1.2.3")
+    assert "abc123" in card
+
+
+def test_dataset_card_never_promises_a_check_it_cannot_perform(tmp_path: Path) -> None:
+    """Without a checksum file there is nothing to verify, and it must say so.
+
+    The first version of this card told every reader to run
+    `sha256sum --check SHA256SUMS` unconditionally, which described a file the
+    bundle did not contain -- the card promising a verification step that does
+    not exist is worse than no card at all.
+    """
+    from opencode_toolkit.core.version import Version
+
+    directory = _bundle(tmp_path, ("sbom.cdx.json",))
+    card = kg.dataset_card(directory, version=Version(0, 1, 0))
+
+    assert "sha256sum --check" not in card
+    assert "without a checksum manifest" in card
+
+
+def test_dataset_card_omits_the_wheel_instructions_without_a_wheel(tmp_path: Path) -> None:
+    from opencode_toolkit.core.version import Version
+
+    directory = _bundle(tmp_path, ("sbom.cdx.json",))
+    card = kg.dataset_card(directory, version=Version(0, 1, 0))
+
+    assert "pip install opencode-toolkit" not in card
+
+
+def test_dataset_card_quotes_the_gate_that_permitted_publishing(tmp_path: Path) -> None:
+    from opencode_toolkit.core.version import Version
+
+    directory = _bundle(tmp_path, ("SHA256SUMS",))
+    permitted = kg.dataset_card(
+        directory,
+        version=Version(0, 1, 1),
+        gate_reason="all 13 mandatory checks passed",
+    )
+    assert "all 13 mandatory checks passed" in permitted
+    assert "thirteen" in permitted
+
+    refused = kg.dataset_card(directory, version=Version(0, 1, 1), gate_reason="")
+    assert "thirteen" not in refused
+
+
+def test_card_validation_rejects_a_file_it_does_not_describe(tmp_path: Path) -> None:
+    """A card that omits a file reads as a complete inventory and is not one."""
+
+    directory = _bundle(tmp_path, ("sbom.cdx.json", "surprise.bin"))
+    # A hand-written or carried-over card: correct sections, but it predates the
+    # file that is now in the bundle. That is what this validator exists for --
+    # a card that omits a file reads as a complete inventory and is not one.
+    (directory / "README.md").write_text(
+        "# OpenCode Toolkit\n\n"
+        "## What is in this bundle\n\n"
+        "| File | Size | What it is |\n| --- | ---: | --- |\n"
+        "| `sbom.cdx.json` | 10 B | SBOM. |\n\n"
+        "## Provenance\n\n- nothing recorded\n\n"
+        "## Licence\n\nApache-2.0.\n",
+        encoding="utf-8",
+    )
+
+    ok, problems = kg.validate_dataset_card(directory)
+    assert ok is False
+    assert any("surprise.bin" in problem for problem in problems)
+
+
+def test_card_validation_requires_the_core_sections(tmp_path: Path) -> None:
+    directory = _bundle(tmp_path, ())
+    (directory / "README.md").write_text("# Not a card\n", encoding="utf-8")
+
+    ok, problems = kg.validate_dataset_card(directory)
+    assert ok is False
+    assert len(problems) >= 2
+
+
+def test_card_validation_reports_a_missing_card(tmp_path: Path) -> None:
+    directory = _bundle(tmp_path, ())
+    ok, problems = kg.validate_dataset_card(directory)
+    assert ok is False
+    assert "README.md" in problems[0]
+
+
+def test_the_generated_card_passes_its_own_validator(tmp_path: Path) -> None:
+    from opencode_toolkit.core.version import Version
+
+    directory = _bundle(tmp_path, ("SHA256SUMS", "sbom.cdx.json", "docs/a.md"))
+    (directory / "README.md").write_text(
+        kg.dataset_card(directory, version=Version(0, 1, 0)), encoding="utf-8"
+    )
+    ok, problems = kg.validate_dataset_card(directory)
+    assert ok, problems
+
+
+def test_dataset_metadata_describes_the_artefacts_not_just_itself() -> None:
+    """The resource list is the dataset page's file table."""
+    root = Path(__file__).resolve().parents[2]
+    paths = {item["path"] for item in kg.dataset_metadata(root)["resources"]}
+    assert "dataset-metadata.json" in paths
+    assert kg.CARD_FILENAME in paths
+
+
+def test_release_allowlist_excludes_build_output_and_the_source_tree() -> None:
+    """A dataset page is not a code host.
+
+    Staging the repository put 149 files on the card, most of them "Supporting
+    file", plus `src/opencode_toolkit.egg-info` build metadata.
+    """
+    from opencode_toolkit.publishing.artifacts import RELEASE_ALLOWLIST
+
+    assert not any(pattern.startswith("dist") for pattern in RELEASE_ALLOWLIST)
+    assert not any(pattern.startswith("src") for pattern in RELEASE_ALLOWLIST)
+    assert not any(pattern.startswith("tests") for pattern in RELEASE_ALLOWLIST)
+    assert "docs/*" in RELEASE_ALLOWLIST
+    assert "LICENSE" in RELEASE_ALLOWLIST
+
+
+def test_verified_release_files_come_from_the_signed_manifest(tmp_path: Path) -> None:
+    """Only files the build recorded get copied past the dist exclusion."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "artifacts.json").write_text(
+        json.dumps({"artifacts": [{"name": "thing.whl", "sha256": "0" * 64}]}), encoding="utf-8"
+    )
+    (dist / "SHA256SUMS").write_text("x\n", encoding="utf-8")
+    (dist / "planted.whl").write_text("not in the manifest\n", encoding="utf-8")
+
+    names = kg.verified_release_files(tmp_path)
+    assert "dist/thing.whl" in names
+    assert "dist/SHA256SUMS" in names
+    assert "dist/planted.whl" not in names
+
+
+def test_verified_release_files_is_empty_without_a_manifest(tmp_path: Path) -> None:
+    assert kg.verified_release_files(tmp_path) == ()
+
+
+@pytest.mark.regression
+def test_the_real_repository_produces_a_complete_valid_card(tmp_path: Path) -> None:
+    """Run the actual Kaggle staging path over this repository.
+
+    The card is generated at publish time, so nothing in the repository can rot
+    it. What *can* rot is the staging that feeds it: a file that stops matching
+    the allow-list disappears from the bundle, or a card section stops matching
+    what the generator emits. Exercising the real path catches both, and it is
+    the only test that notices the bundle quietly stopped carrying the release
+    artefacts at all.
+    """
+    import json as _json
+
+    from opencode_toolkit.cli.commands.publish import _add_release_artefacts
+    from opencode_toolkit.publishing.artifacts import RELEASE_ALLOWLIST, clean_publish_directory
+
+    root = Path(__file__).resolve().parents[2]
+    staging = tmp_path / "staging"
+    result = clean_publish_directory(root, staging, allowlist=RELEASE_ALLOWLIST)
+
+    assert result["included"], "the release bundle staged nothing at all"
+    assert not any(name.startswith("src/") for name in result["included"])
+    assert not any(name.startswith("tests/") for name in result["included"])
+    assert not any("egg-info" in name for name in result["included"])
+    assert "docs/security/model.md" in result["included"]
+    assert "LICENSE" in result["included"]
+
+    _add_release_artefacts(root, staging)
+    text = kg.write_dataset_card(staging, root=root)
+    (staging / kg.METADATA_FILENAME).write_text(
+        _json.dumps(kg.dataset_metadata(root), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+    assert text.startswith("# OpenCode Toolkit")
+    ok, problems = kg.validate_dataset_card(staging)
+    assert ok, problems
+    ok, problems = kg.validate_dataset_metadata(staging)
+    assert ok, problems

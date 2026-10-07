@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import argparse
-import subprocess
 from pathlib import Path
 from typing import Any
 
 from opencode_toolkit.cli.context import JSON, CliContext, emit_json
 from opencode_toolkit.core import exit_codes
 from opencode_toolkit.core.errors import ConfigurationError, UsageError
+from opencode_toolkit.core.gitmeta import head_commit
 from opencode_toolkit.release.artifacts import build_artifacts, verify_artifacts
 from opencode_toolkit.release.changelog import (
     clear_fragments,
@@ -123,10 +123,8 @@ def run_release(context: CliContext, args: argparse.Namespace) -> int:
     """Dispatch a ``release`` subcommand.
 
     Args:
-        context: CliContext: Workspace, layout, config and output streams to
-            report through.
-        args: argparse.Namespace: Parsed ``release`` options, including the
-            selected subcommand and its flags.
+        context: CliContext: CliContext: CliContext: CliContext: Workspace, layout, config and output streams to report through.
+        args: argparse.Namespace: argparse.Namespace: argparse.Namespace: argparse.Namespace: Parsed ``release`` options, including the selected subcommand and its flags.
     """
     command = getattr(args, "release_command", None)
     if not command:
@@ -157,21 +155,6 @@ def run_release(context: CliContext, args: argparse.Namespace) -> int:
         "preflight": _cmd_preflight,
     }
     return handlers[command](context, args)
-
-
-def _commit(context_workspace: Path) -> str:
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=str(context_workspace),
-            capture_output=True,
-            text=True,
-            timeout=15,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return ""
-    return completed.stdout.strip() if completed.returncode == 0 else ""
 
 
 def _parse_assignment(text: str) -> tuple[str, CheckStatus, str]:
@@ -213,7 +196,9 @@ def _cmd_gate(context: CliContext, args: argparse.Namespace) -> int:
         if context.dry_run:
             context.note("dry run: would initialise the gate")
             return exit_codes.OK
-        fresh = new_gate(str(current_version(context.workspace)), commit=_commit(context.workspace))
+        fresh = new_gate(
+            str(current_version(context.workspace)), commit=head_commit(context.workspace)
+        )
         if args.allow_skip:
             from opencode_toolkit.release.gate import GatePolicy
 
@@ -443,10 +428,10 @@ def record_gate_status(path: Path, name: str, status: CheckStatus, detail: str) 
     """Update one gate check in place; used by scripts and tests.
 
     Args:
-        path: Path: Gate JSON file; a new gate is created when it is absent.
-        name: str: Name of the check to update.
-        status: CheckStatus: Outcome recorded for that check.
-        detail: str: Free-text detail stored alongside the status.
+        path: Path: Path: Path: Path: Gate JSON file; a new gate is created when it is absent.
+        name: str: str: str: str: Name of the check to update.
+        status: CheckStatus: CheckStatus: CheckStatus: CheckStatus: Outcome recorded for that check.
+        detail: str: str: str: str: Free-text detail stored alongside the status.
     """
     gate = load_gate(path) if path.is_file() else new_gate()
     write_gate_json(path, record(gate, name, status, detail=detail))
@@ -456,8 +441,8 @@ def write_gate_json(path: Path, gate: GateResult) -> None:
     """Persist *gate* to *path* atomically.
 
     Args:
-        path: Path: Destination file for the serialised gate.
-        gate: GateResult: The gate result written to that file.
+        path: Path: Path: Path: Path: Destination file for the serialised gate.
+        gate: GateResult: GateResult: GateResult: GateResult: The gate result written to that file.
     """
     from opencode_toolkit.release.gate import write_gate
 

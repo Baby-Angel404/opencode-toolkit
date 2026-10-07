@@ -1,0 +1,9 @@
+{
+  "area": "publishing",
+  "breaking": false,
+  "description": "The Kaggle bundle staged the whole repository, so the dataset card listed 149 files, most of them 'Supporting file', along with src/opencode_toolkit.egg-info build metadata. It now stages the documentation and adds the signed release artefacts by name, since dist/ is excluded from publishing and a directory called dist reads like a build-system detail on a dataset page.",
+  "id": "fix-kaggle-bundle-contents",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "fixed"
+}

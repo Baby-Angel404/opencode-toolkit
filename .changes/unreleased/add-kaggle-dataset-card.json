@@ -1,0 +1,9 @@
+{
+  "area": "publishing",
+  "breaking": false,
+  "description": "The Kaggle dataset page is now a generated card: a table of every file in the bundle with a real size and a plain description, how to verify it, what it is not, and the commit it was built from. It is rendered from the files actually on disk, so it cannot claim something the bundle does not contain, and it never promises a checksum step the bundle cannot perform.",
+  "id": "add-kaggle-dataset-card",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "added"
+}

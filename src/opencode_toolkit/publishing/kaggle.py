@@ -26,7 +26,8 @@ from typing import Any
 
 from opencode_toolkit.core import logging
 from opencode_toolkit.core.errors import ConfigurationError, NetworkError
-from opencode_toolkit.core.version import detect_version
+from opencode_toolkit.core.gitmeta import head_commit
+from opencode_toolkit.core.version import Version, detect_version
 from opencode_toolkit.publishing.artifacts import assert_clean
 from opencode_toolkit.publishing.classify import (
     KAGGLE_KEY_ENV,
@@ -38,6 +39,10 @@ from opencode_toolkit.release.gate import GateResult
 logger = logging.get_logger("publishing.kaggle")
 
 KAGGLE_API = "https://www.kaggle.com/api/v1"
+
+#: Where the full source and documentation live. The bundle is a release, not the
+#: project, so the card has to say where the rest of it is.
+DEFAULT_REPO_URL = "https://github.com/Baby-Angel404/opencode-toolkit"
 
 METADATA_FILENAME = "dataset-metadata.json"
 REQUIRED_METADATA_KEYS = ("title", "id", "licenses", "keywords")
@@ -79,37 +84,356 @@ class KaggleResult:
         }
 
 
+#: One-line purpose for each artefact kind the release produces. The dataset card
+#: is the only place a visitor learns what a file is for, so an undescribed file
+#: in the bundle is a card that has failed at its one job.
+ARTEFACT_PURPOSE: dict[str, str] = {
+    "wheel": "Installable wheel. `pip install` this to get the `opencode` CLI.",
+    "source-archive": "Source distribution. Build from source to audit what you run.",
+    "offline-pack": "Offline pack: the toolkit plus its verified snippets, checksummed, for air-gapped use.",
+    "sbom": "CycloneDX SBOM. Machine-readable inventory of every component.",
+    "documentation": "This project's documentation set, archived.",
+    "artifact_index": "Signed index of this bundle: sizes and SHA-256 digests.",
+    "checksums": "SHA-256 digests of every other file here. Verify before trusting anything.",
+}
+
+#: Files that must appear in the card, or the card is incomplete.
+CARD_FILENAME = "README.md"
+
+
+def _human_bytes(count: int) -> str:
+    """Return *count* bytes in a unit a human reads without converting."""
+    size = float(count)
+    for unit in ("B", "KiB", "MiB", "GiB"):
+        if size < 1024 or unit == "GiB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} GiB"  # pragma: no cover - unreachable
+
+
+def verified_release_files(root: Path) -> tuple[str, ...]:
+    """Return the artefact paths a signed build manifest vouches for.
+
+    A dataset bundle carries the release outputs, so ``dist/*`` has to get past
+    the publishing exclusion. Doing that by name rather than by lifting the
+    exclusion means only files the build recorded -- with a size and a SHA-256
+    -- are copied, and an unvetted file someone dropped in ``dist/`` is not.
+
+    Args:
+        root: Path: Path: Path: Path: Repository root; ``dist/artifacts.json`` is read from it.
+    """
+    from opencode_toolkit.core import jsonio
+
+    index = root / "dist" / "artifacts.json"
+    if not index.is_file():
+        return ()
+    try:
+        document = jsonio.read(index)
+    except Exception:
+        return ()
+    names = document.get("artifacts") if isinstance(document, dict) else None
+    if not isinstance(names, list):
+        return ()
+    vouched = {
+        f"dist/{item['name']}"
+        for item in names
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    # The manifest cannot list itself, and its checksum file is written after it,
+    # so both are named here. They are written by the release build itself, which
+    # is the same provenance as everything the manifest does list.
+    for companion in ("dist/artifacts.json", "dist/SHA256SUMS"):
+        if (root / companion).is_file():
+            vouched.add(companion)
+    return tuple(sorted(vouched))
+
+
+def write_dataset_card(
+    directory: Path,
+    *,
+    root: Path,
+    gate: GateResult | None = None,
+    repo_url: str = DEFAULT_REPO_URL,
+) -> str:
+    """Render the card into *directory* as ``README.md`` and return its text.
+
+    Args:
+        directory: Path: Path: Path: Path: Prepared dataset bundle; the card is written here so it reflects exactly the files that will be uploaded.
+        root: Path: Path: Path: Path: Repository root, used to detect the release version.
+        gate: GateResult | None: GateResult | None: GateResult | None: GateResult | None: The gate that permitted publishing, quoted in the card's provenance so a visitor can see why it was allowed.
+        repo_url: str: str: str: str: Repository the full source and documentation live at.
+    """
+    permitted, reason = gate.publish_permitted() if gate is not None else (False, "")
+    text = dataset_card(
+        directory,
+        version=detect_version(root),
+        commit=head_commit(root),
+        gate_reason=reason if permitted else "",
+        repo_url=repo_url,
+    )
+    (directory / CARD_FILENAME).write_text(text, encoding="utf-8")
+    return text
+
+
+def dataset_card(
+    directory: Path,
+    *,
+    version: Version,
+    commit: str = "",
+    gate_reason: str = "",
+    repo_url: str = DEFAULT_REPO_URL,
+) -> str:
+    """Render the visitor-facing dataset card for the bundle in *directory*.
+
+    Generated from what is actually on disk rather than written by hand, so it
+    cannot claim a file the bundle does not contain or describe a size that has
+    changed. Every top-level file is listed, because the card is the only place
+    a visitor is told what they downloaded.
+
+    Args:
+        directory: Path: Path: Path: Path: Prepared dataset bundle to describe.
+        version: Version: Version: Version: Version: Release this bundle was cut from.
+        commit: str: str: str: str: Commit the release was built from, for provenance.
+        gate_reason: str: str: str: str: Why the release gate permitted publishing, if known.
+        repo_url: str: str: str: str: Repository the full source and docs live at.
+    """
+    entries: list[tuple[str, str, int]] = []
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        if path.name in {CARD_FILENAME, METADATA_FILENAME}:
+            continue
+        entries.append(
+            (path.relative_to(directory).as_posix(), _purpose_of(path), path.stat().st_size)
+        )
+
+    lines: list[str] = [
+        f"# OpenCode Toolkit {version}",
+        "",
+        "A modular engineering toolkit for OpenCode projects, shipped as a verified",
+        "file bundle: security auditing across four languages, encrypted workflow sync,",
+        "a reviewed snippet registry, task-graph orchestration, an offline pack, and",
+        "documentation drift detection.",
+        "",
+        "**Zero third-party runtime dependencies.** The CLI runs on the Python standard",
+        "library alone, which is what makes the offline pack redistributable without a",
+        "third-party licence audit and a clean-checkout install deterministic.",
+        "",
+        "## What is in this bundle",
+        "",
+        "| File | Size | What it is |",
+        "| --- | ---: | --- |",
+    ]
+    for name, purpose, size in entries:
+        lines.append(f"| `{name}` | {_human_bytes(size)} | {purpose} |")
+
+    present = {name for name, _, _ in entries}
+    lines.append("")
+    lines.append("## Verifying what you downloaded")
+    lines.append("")
+    lines.append("Nothing here should be trusted on the strength of this page. Check it:")
+    lines.append("")
+    if "SHA256SUMS" in present:
+        lines += [
+            "```console",
+            "$ sha256sum --check --ignore-missing SHA256SUMS",
+            "```",
+            "",
+            "Every digest must report `OK`. If one does not, nothing else on this page",
+            "is worth reading.",
+            "",
+        ]
+    else:
+        # Never promise a verification step this bundle cannot perform.
+        lines += [
+            "This bundle was published without a checksum manifest, so there is no",
+            "command here that would let you check it. Treat every file as unverified",
+            "and prefer a build with `SHA256SUMS`.",
+            "",
+        ]
+
+    if gate_reason:
+        lines += [
+            "The release gate that permitted this refuses to publish until all thirteen",
+            "checks pass: build, format, lint, types, unit, integration, CLI, security,",
+            "dependency audit, secret scan, documentation, package, and reproducibility.",
+            "",
+        ]
+
+    if any(name.endswith(".whl") for name in present):
+        lines += [
+            "## Using it",
+            "",
+            "Install the wheel and point it at your project:",
+            "",
+            "```console",
+            "$ pip install opencode-toolkit",
+            "$ opencode doctor                    # what is and is not available here",
+            "$ opencode security-audit . --strict",
+            "```",
+            "",
+        ]
+    if any(n.endswith("-offline.zip") for n in present):
+        lines += [
+            "Working offline or on an air-gapped host? Take the offline pack instead, which",
+            "bundles the toolkit with its verified snippets and per-file checksums.",
+            "",
+        ]
+
+    lines += [
+        "## What this bundle is not",
+        "",
+        "Being precise about this is the point of publishing it here rather than as a",
+        "model or an app:",
+        "",
+        "- **Not a model.** There are no trained weights and no inference code.",
+        "- **Not a dataset.** There is no row data and no training corpus.",
+        "- **Not an application.** It is a command-line tool, not a service to host.",
+        "- **Not a container.** No image is included; the runtime needs only CPython.",
+        "",
+        "What it *is* is a reproducible software bundle with a verifiable manifest.",
+        "",
+        "## Provenance",
+        "",
+    ]
+    if commit:
+        lines.append(f"- Built from commit `{commit}`.")
+    if gate_reason:
+        lines.append(f"- Release gate: {gate_reason}.")
+    lines += [
+        f"- Source, issue tracker and full documentation: {repo_url}",
+        "- Licence: Apache-2.0. Third-party code: none at runtime, so there is nothing",
+        "  else to attribute.",
+        "",
+        "## Licence",
+        "",
+        "Apache-2.0. See `LICENSE` in this bundle.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _purpose_of(path: Path) -> str:
+    """Describe *path* by what it is, falling back to its shape."""
+    name = path.name
+    if name.endswith(".whl"):
+        return ARTEFACT_PURPOSE["wheel"]
+    if name.endswith("-sdist.tar.gz"):
+        return ARTEFACT_PURPOSE["source-archive"]
+    if name.endswith("-offline.zip"):
+        return ARTEFACT_PURPOSE["offline-pack"]
+    if name.endswith(".cdx.json"):
+        return ARTEFACT_PURPOSE["sbom"]
+    if name.endswith(".tar.gz"):
+        return ARTEFACT_PURPOSE["documentation"]
+    if name == "SHA256SUMS":
+        return ARTEFACT_PURPOSE["checksums"]
+    if name == "artifacts.json":
+        return ARTEFACT_PURPOSE["artifact_index"]
+    if name == "LICENSE":
+        return "The Apache-2.0 licence text."
+    if name == "CHANGELOG.md":
+        return "What changed in each release."
+    if name.startswith("docs/"):
+        return f"Documentation: {Path(name).stem.replace('-', ' ')}."
+    if name.endswith(".md"):
+        return "Documentation."
+    return "Supporting file."
+
+
+def validate_dataset_card(directory: Path) -> tuple[bool, list[str]]:
+    """Check the card exists and actually describes the bundle it ships with.
+
+    A card that omits a file is worse than no card: it reads as a complete
+    inventory and is not one. Anything present must be named, so a file added to
+    the bundle without a line of description fails the publish.
+
+    Args:
+        directory: Path: Path: Path: Path: Prepared dataset directory holding ``README.md``.
+    """
+    problems: list[str] = []
+    card = directory / CARD_FILENAME
+    if not card.is_file():
+        return False, [f"{CARD_FILENAME} is the dataset card and was not found"]
+    text = card.read_text(encoding="utf-8")
+    if not text.lstrip().startswith("#"):
+        problems.append(f"{CARD_FILENAME} does not start with a heading")
+    for required in ("## What is in this bundle", "## Provenance", "## Licence"):
+        if required not in text:
+            problems.append(f"{CARD_FILENAME} is missing the {required!r} section")
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        relative = path.relative_to(directory).as_posix()
+        if relative in {CARD_FILENAME, METADATA_FILENAME}:
+            continue
+        if f"`{relative}`" not in text:
+            problems.append(f"{CARD_FILENAME} does not describe {relative}")
+    return not problems, problems
+
+
+def _describe_resources(root: Path) -> list[dict[str, str]]:
+    """Describe the release artefacts a visitor will find in the bundle.
+
+    Args:
+        root: Path: Repository root, used to locate ``dist/`` when a build is
+            present so the listing reflects real files rather than a guess.
+    """
+    resources: list[dict[str, str]] = [
+        {"path": CARD_FILENAME, "description": "Dataset card: contents, verification, provenance."},
+        {"path": METADATA_FILENAME, "description": "Kaggle dataset metadata."},
+    ]
+    dist = root / "dist"
+    if not dist.is_dir():
+        return resources
+    for path in sorted(dist.glob("*")):
+        if not path.is_file():
+            continue
+        resources.append({"path": path.name, "description": _purpose_of(path)})
+    return resources
+
+
 def dataset_metadata(
     root: Path, *, owner: str = "", slug: str = "opencode-toolkit"
 ) -> dict[str, Any]:
     """Build the Kaggle dataset metadata for this release.
 
     Args:
-        root: Path: Repository root; its detected version supplies
-            ``version.version_number``.
-        owner: str: Kaggle account or organisation that owns the dataset; when
-            empty, ``id`` is emitted as the bare *slug*.
-        slug: str: Dataset slug used when *owner* is empty.
+        root: Path: Path: Path: Path: Repository root; its detected version supplies ``version.version_number``.
+        owner: str: str: str: str: Kaggle account or organisation that owns the dataset; when empty, ``id`` is emitted as the bare *slug*.
+        slug: str: str: str: str: Dataset slug used when *owner* is empty.
     """
     version = detect_version(root)
     return {
         "title": "OpenCode Toolkit",
         "id": f"{owner}/{slug}" if owner else slug,
         "licenses": [{"name": "CC0-1.0"}],
-        "keywords": ["opencode", "security", "devops", "tooling", "static-analysis"],
-        "subtitle": "Unified OpenCode engineering toolkit with security auditing and release tooling",
+        "keywords": [
+            "opencode",
+            "security-audit",
+            "static-analysis",
+            "supply-chain",
+            "sbom",
+            "devops",
+            "tooling",
+            "orchestration",
+            "offline",
+            "python",
+            "security",
+        ],
+        "subtitle": (
+            "Verified release bundle: security auditing, encrypted sync, snippets, "
+            "orchestration, offline pack"
+        ),
         "description": (
             "OpenCode Toolkit is a Python CLI providing multi-language security auditing, "
             "encrypted workflow synchronisation, a verified snippet registry, multi-agent "
             "task orchestration, verifiable offline packages and documentation drift "
             "detection. The runtime has no third-party dependencies."
         ),
-        "resources": [
-            {
-                "path": METADATA_FILENAME,
-                "description": "Kaggle dataset metadata",
-            }
-        ],
+        # Every real file, described. The previous entry listed only the metadata
+        # file itself, so the dataset page described nothing it contained.
+        "resources": _describe_resources(root),
         "version": {
             "version_number": str(version),
             "description": f"opencode-toolkit {version}",
@@ -128,9 +452,7 @@ def validate_dataset_metadata(directory: Path) -> tuple[bool, list[str]]:
     """Validate ``dataset-metadata.json`` before upload.
 
     Args:
-        directory: Path: Prepared dataset directory; its
-            ``dataset-metadata.json`` is parsed and checked against
-            :data:`REQUIRED_METADATA_KEYS`.
+        directory: Path: Path: Path: Path: Prepared dataset directory; its ``dataset-metadata.json`` is parsed and checked against :data:`REQUIRED_METADATA_KEYS`.
     """
     problems: list[str] = []
     path = directory / METADATA_FILENAME
@@ -171,8 +493,7 @@ def re_full_owner_slug(identifier: str) -> bool:
     """Return ``True`` when *identifier* is ``owner/slug`` or ``slug``.
 
     Args:
-        identifier: str: Candidate metadata ``id``, matched in full against
-            ``[A-Za-z0-9_-]+`` with an optional ``owner/`` prefix.
+        identifier: str: str: str: str: Candidate metadata ``id``, matched in full against ``[A-Za-z0-9_-]+`` with an optional ``owner/`` prefix.
     """
     import re
 
@@ -210,8 +531,7 @@ class KagglePublisher:
         """Return a BLOCKED result when the gate does not permit publishing.
 
         Args:
-            gate: GateResult: Recorded release gate decision; when it does not
-                permit publishing, its reason is logged and carried in the result.
+            gate: GateResult: GateResult: GateResult: GateResult: Recorded release gate decision; when it does not permit publishing, its reason is logged and carried in the result.
         """
         permitted, reason = gate.publish_permitted()
         if permitted:
@@ -228,10 +548,7 @@ class KagglePublisher:
         """Return a SKIPPED result when a required credential is absent.
 
         Args:
-            environ: dict[str, str] | None: Environment mapping to read from;
-                defaults to :data:`os.environ`. Only the presence of
-                ``KAGGLE_USERNAME`` and ``KAGGLE_KEY`` is checked -- no
-                credential value is returned or logged.
+            environ: dict[str, str] | None: dict[str, str] | None: dict[str, str] | None: dict[str, str] | None: Environment mapping to read from; defaults to :data:`os.environ`. Only the presence of ``KAGGLE_USERNAME`` and ``KAGGLE_KEY`` is checked -- no credential value is returned or logged.
         """
         missing = missing_credentials(KAGGLE_USERNAME_ENV, KAGGLE_KEY_ENV, environ=environ)
         if not missing:
@@ -253,12 +570,8 @@ class KagglePublisher:
         """Upload *directory* as a Dataset zip and verify it afterwards.
 
         Args:
-            directory: Path: Prepared dataset directory to zip and upload; it is
-                metadata- and secret-validated before any upload is attempted.
-            environ: dict[str, str] | None: Environment mapping to read from;
-                defaults to :data:`os.environ`. ``KAGGLE_USERNAME`` and
-                ``KAGGLE_KEY`` are read from it to authenticate; the values are
-                never returned or logged.
+            directory: Path: Path: Path: Path: Prepared dataset directory to zip and upload; it is metadata- and secret-validated before any upload is attempted.
+            environ: dict[str, str] | None: dict[str, str] | None: dict[str, str] | None: dict[str, str] | None: Environment mapping to read from; defaults to :data:`os.environ`. ``KAGGLE_USERNAME`` and ``KAGGLE_KEY`` are read from it to authenticate; the values are never returned or logged.
         """
         env = dict(os.environ if environ is None else environ)
 
@@ -324,10 +637,8 @@ class KagglePublisher:
         """Confirm the dataset exists remotely and reports its files.
 
         Args:
-            username: str: Kaggle account used in the request URL and in HTTP
-                Basic authentication.
-            key: str: Kaggle API key used only in the ``Authorization`` header;
-                the value is never returned or logged.
+            username: str: str: str: str: Kaggle account used in the request URL and in HTTP Basic authentication.
+            key: str: str: str: str: Kaggle API key used only in the ``Authorization`` header; the value is never returned or logged.
         """
         url = f"{self.api_base}/datasets/list/{username}/{self.dataset_slug}"
         headers = {"Authorization": self._auth_header(username, key)}

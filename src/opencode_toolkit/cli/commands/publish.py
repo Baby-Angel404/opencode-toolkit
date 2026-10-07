@@ -14,13 +14,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
 from opencode_toolkit.cli.context import JSON, CliContext, emit_json
-from opencode_toolkit.core import exit_codes
+from opencode_toolkit.core import exit_codes, logging
 from opencode_toolkit.core.errors import ConfigurationError, UsageError
-from opencode_toolkit.publishing.artifacts import clean_publish_directory, directory_digest
+from opencode_toolkit.publishing.artifacts import (
+    DEFAULT_ALLOWLIST,
+    RELEASE_ALLOWLIST,
+    clean_publish_directory,
+    directory_digest,
+)
 from opencode_toolkit.publishing.classify import (
     HUGGINGFACE_TOKEN_ENV,
     KAGGLE_KEY_ENV,
@@ -31,9 +37,14 @@ from opencode_toolkit.publishing.huggingface import HuggingFacePublisher, space_
 from opencode_toolkit.publishing.kaggle import (
     KagglePublisher,
     dataset_metadata,
+    validate_dataset_card,
     validate_dataset_metadata,
+    verified_release_files,
+    write_dataset_card,
 )
 from opencode_toolkit.release.gate import GateResult, load_gate
+
+logger = logging.get_logger("publish")
 
 #: Gate location, relative to the already-resolved state directory
 #: (``<workspace>/.opencode/toolkit`` by default). Joining the full
@@ -101,10 +112,8 @@ def run_publish(context: CliContext, args: argparse.Namespace) -> int:
     """Dispatch a ``publish`` subcommand.
 
     Args:
-        context: CliContext: Workspace, layout, config and output streams to
-            report through.
-        args: argparse.Namespace: Parsed ``publish`` options, including the
-            selected subcommand and its flags.
+        context: CliContext: CliContext: CliContext: CliContext: Workspace, layout, config and output streams to report through.
+        args: argparse.Namespace: argparse.Namespace: argparse.Namespace: argparse.Namespace: Parsed ``publish`` options, including the selected subcommand and its flags.
     """
     command = getattr(args, "publish_command", None)
     if not command:
@@ -138,8 +147,17 @@ def _load_gate(context: CliContext, args: argparse.Namespace) -> GateResult:
     return load_gate(path)
 
 
-def _prepare_directory(context: CliContext, args: argparse.Namespace) -> Path:
-    """Return the prepared publishing directory, building it if needed."""
+def _prepare_directory(
+    context: CliContext, args: argparse.Namespace, *, allowlist: tuple[str, ...] | None = None
+) -> Path:
+    """Return the prepared publishing directory, building it if needed.
+
+    Args:
+        context: CliContext: Resolved invocation context.
+        args: argparse.Namespace: Publish options, including the staging path.
+        allowlist: tuple[str, ...] | None: Glob patterns a staged file must
+            match; defaults to the repository-wide list.
+    """
     if args.directory:
         path = Path(args.directory).expanduser()
         if not path.is_dir():
@@ -156,11 +174,11 @@ def _prepare_directory(context: CliContext, args: argparse.Namespace) -> Path:
     if context.dry_run:
         context.note(f"dry run: would prepare a publishing directory at {staging}")
         return staging
-    import shutil
-
     if staging.exists():
         shutil.rmtree(staging)
-    result = clean_publish_directory(context.workspace, staging)
+    result = clean_publish_directory(
+        context.workspace, staging, allowlist=allowlist or DEFAULT_ALLOWLIST
+    )
     context.note(f"prepared {len(result['included'])} file(s); excluded {result['excluded_count']}")
     return staging
 
@@ -295,6 +313,33 @@ def _space_readme(metadata: Any, existing: str) -> str:
     return front_matter + "\n" + body
 
 
+def _add_release_artefacts(root: Path, directory: Path) -> list[str]:
+    """Copy the signed release artefacts into *directory*, at the top level.
+
+    Named individually from ``dist/artifacts.json`` rather than by globbing
+    ``dist/``: that path is excluded from publishing so an unvetted build cannot
+    leak, and a directory called ``dist`` reads like a build-system detail on a
+    dataset page rather than something a visitor should have to think about.
+
+    Args:
+        root: Path: Repository root holding ``dist/``.
+        directory: Path: Prepared dataset bundle to add the artefacts to.
+    """
+    added: list[str] = []
+    for relative in verified_release_files(root):
+        source = root / relative
+        if not source.is_file():
+            continue
+        shutil.copyfile(source, directory / source.name)
+        added.append(source.name)
+    if not added:
+        logger.warning(
+            "no release artefacts found under %s; the dataset bundle would carry none",
+            root / "dist",
+        )
+    return added
+
+
 def _cmd_kaggle(context: CliContext, args: argparse.Namespace) -> int:
     classification = classify_project(context.workspace)
     if not classification.kaggle_applicable:
@@ -316,23 +361,48 @@ def _cmd_kaggle(context: CliContext, args: argparse.Namespace) -> int:
     if skipped is not None:
         return _finish(context, skipped.to_dict())
 
-    directory = _prepare_directory(context, args)
+    # A dataset page is not a code host: stage the release outputs and the
+    # documentation, not the working tree.
+    directory = _prepare_directory(context, args, allowlist=RELEASE_ALLOWLIST)
+    _add_release_artefacts(context.workspace, directory)
     metadata = dataset_metadata(context.workspace, owner=args.owner or "")
     (directory / "dataset-metadata.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    # The card replaces the project README inside the bundle. Kaggle renders
+    # README.md as the dataset page, so it has to describe *this bundle* -- what
+    # is in it, how to verify it, where it came from -- not how to clone a git
+    # repository. The full project README stays in the bundle under its own name
+    # so nothing is lost, and the card links to it.
+    project_readme = context.workspace / "README.md"
+    if (directory / "README.md").is_file():
+        (directory / "PROJECT-README.md").write_text(
+            (directory / "README.md").read_text(encoding="utf-8"), encoding="utf-8"
+        )
     (directory / "README.md").write_text(
-        (context.workspace / "README.md").read_text(encoding="utf-8"), encoding="utf-8"
+        write_dataset_card(directory, root=context.workspace, gate=gate), encoding="utf-8"
     )
-    ok, problems = validate_dataset_metadata(directory)
-    if not ok:
+    if project_readme.is_file():
+        # Regenerate the metadata last: it lists the files now present, which
+        # includes the card and the preserved project README.
+        metadata = dataset_metadata(context.workspace, owner=args.owner or "")
+        (directory / "dataset-metadata.json").write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+    problems: list[str] = []
+    ok, metadata_problems = validate_dataset_metadata(directory)
+    problems += metadata_problems
+    card_ok, card_problems = validate_dataset_card(directory)
+    problems += card_problems
+    if not (ok and card_ok):
         return _finish(
             context,
             {
                 "platform": "kaggle",
                 "status": "BLOCKED",
                 "dataset_ref": publisher.dataset_ref,
-                "reason": "dataset metadata validation failed",
+                "reason": "dataset card or metadata validation failed",
                 "verification": {"problems": problems},
             },
         )

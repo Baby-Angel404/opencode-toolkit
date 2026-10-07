@@ -1,9 +1,9 @@
 {
   "counts": {
     "class": 99,
-    "function": 413,
+    "function": 418,
     "partial": 1,
-    "total": 512,
+    "total": 517,
     "undocumented": 11
   },
   "items": [
@@ -3237,6 +3237,20 @@
       "file": "opencode_toolkit/publishing/kaggle.py",
       "kind": "function",
       "parameters": [
+        "directory",
+        "version",
+        "commit",
+        "gate_reason",
+        "repo_url"
+      ],
+      "qualified_name": "dataset_card",
+      "returns": "str",
+      "signature": "def dataset_card(directory: Path, version: Version, commit: str = '', gate_reason: str = '', repo_url: str = DEFAULT_REPO_URL) -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
         "root",
         "owner",
         "slug"
@@ -3538,6 +3552,17 @@
       "qualified_name": "get_logger",
       "returns": "logging.Logger",
       "signature": "def get_logger(name: str | None = None) -> logging.Logger"
+    },
+    {
+      "file": "opencode_toolkit/core/gitmeta.py",
+      "kind": "function",
+      "parameters": [
+        "root",
+        "timeout"
+      ],
+      "qualified_name": "head_commit",
+      "returns": "str",
+      "signature": "def head_commit(root: Path, timeout: int = 15) -> str"
     },
     {
       "file": "opencode_toolkit/offline_pack/builder.py",
@@ -4670,6 +4695,16 @@
       "parameters": [
         "directory"
       ],
+      "qualified_name": "validate_dataset_card",
+      "returns": "tuple[bool, list[str]]",
+      "signature": "def validate_dataset_card(directory: Path) -> tuple[bool, list[str]]"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "directory"
+      ],
       "qualified_name": "validate_dataset_metadata",
       "returns": "tuple[bool, list[str]]",
       "signature": "def validate_dataset_metadata(directory: Path) -> tuple[bool, list[str]]"
@@ -4703,6 +4738,16 @@
       "qualified_name": "validate_tag",
       "returns": "str",
       "signature": "def validate_tag(tag: str) -> str"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "root"
+      ],
+      "qualified_name": "verified_release_files",
+      "returns": "tuple[str, ...]",
+      "signature": "def verified_release_files(root: Path) -> tuple[str, ...]"
     },
     {
       "file": "opencode_toolkit/offline_pack/manifest.py",
@@ -4793,6 +4838,19 @@
       "qualified_name": "write_changelog",
       "returns": "Path",
       "signature": "def write_changelog(root: Path, version: str | None = None, released: date | None = None) -> Path"
+    },
+    {
+      "file": "opencode_toolkit/publishing/kaggle.py",
+      "kind": "function",
+      "parameters": [
+        "directory",
+        "root",
+        "gate",
+        "repo_url"
+      ],
+      "qualified_name": "write_dataset_card",
+      "returns": "str",
+      "signature": "def write_dataset_card(directory: Path, root: Path, gate: GateResult | None = None, repo_url: str = DEFAULT_REPO_URL) -> str"
     },
     {
       "file": "opencode_toolkit/release/changelog.py",

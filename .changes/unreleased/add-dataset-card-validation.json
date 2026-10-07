@@ -1,0 +1,9 @@
+{
+  "area": "publishing",
+  "breaking": false,
+  "description": "A publish is refused unless the card describes every file in the bundle and carries its core sections, so a hand-written or carried-over card cannot ship as a complete inventory.",
+  "id": "add-dataset-card-validation",
+  "issue": "",
+  "kind": "opencode-toolkit/changelog-fragment",
+  "type": "added"
+}

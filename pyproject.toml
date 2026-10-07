@@ -135,7 +135,6 @@ ignore = [
 "src/opencode_toolkit/cli/commands/*.py" = ["ARG001"]
 # `git` is invoked from PATH on purpose: the release gate must work on any
 # machine where the user has git but no fixed absolute path for it.
-"src/opencode_toolkit/cli/commands/release.py" = ["S607"]
 # Scanner fixtures exist to be detected: they deliberately contain shell=True,
 # unsafe deserialisation, predictable temp files, and partial executable paths.
 "tests/fixtures/*" = ["S", "PTH", "PL"]
