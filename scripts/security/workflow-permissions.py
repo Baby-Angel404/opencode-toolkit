@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import re
 import sys
 from typing import Final
 
@@ -109,7 +110,7 @@ def _permissions_of(lines: list[str], start: int, owner_indent: int) -> dict[str
 
 
 def _jobs(lines: list[str]) -> dict[str, dict[str, object]]:
-    """Return ``{job_id: {"permissions": {...}, "uses": str | None}}``."""
+    """Return ``{job_id: {"permissions", "uses", "if", "needs"}}`` per job."""
     try:
         jobs_at = next(i for i, line in enumerate(lines) if line.rstrip() == "jobs:")
     except StopIteration:
@@ -126,7 +127,7 @@ def _jobs(lines: list[str]) -> dict[str, dict[str, object]]:
         stripped = raw.strip()
         if indent == 2 and stripped.endswith(":"):
             current = stripped[:-1].strip()
-            jobs[current] = {"permissions": {}, "uses": None}
+            jobs[current] = {"permissions": {}, "uses": None, "if": None, "needs": []}
             continue
         if current is None:
             continue
@@ -134,6 +135,14 @@ def _jobs(lines: list[str]) -> dict[str, dict[str, object]]:
             jobs[current]["permissions"] = _permissions_of(lines, index, 4)
         elif indent == 4 and stripped.startswith("uses:"):
             jobs[current]["uses"] = _scalar(stripped.partition(":")[2])
+        elif indent == 4 and stripped.startswith("if:"):
+            jobs[current]["if"] = stripped.partition(":")[2].strip()
+        elif indent == 4 and stripped.startswith("needs:"):
+            raw = stripped.partition(":")[2].strip()
+            if raw.startswith("["):
+                jobs[current]["needs"] = [
+                    item.strip().strip("'\"") for item in raw.strip("[]").split(",") if item.strip()
+                ]
     return jobs
 
 
@@ -174,6 +183,46 @@ def _covers(granted: dict[str, str], wanted: dict[str, str]) -> list[str]:
     return missing
 
 
+#: Status functions that opt a job out of the "a need was skipped, so I am
+#: skipped too" rule. Without one of these, GitHub skips a dependent job the
+#: moment any job it needs is skipped -- even when the condition would be true.
+_OPTOUTS = ("always()", "cancelled()", "failure()")
+
+
+def skipped_neighbour_gaps(path: pathlib.Path, lines: list[str]) -> list[str]:
+    """Report jobs whose condition can never be true.
+
+    A job that needs X is skipped whenever X is skipped, unless its condition
+    opts in with ``always()``. So a condition that *asserts* X was skipped -- the
+    shape you write when X is a job that only runs on the unhappy path -- can
+    never hold. The job is unreachable, silently.
+
+    That is how an approved gate produced a green run and no release:
+    ``explain-blocked`` only runs when the gate refused, so on success it is
+    skipped, and ``release`` required exactly that. The condition was not wrong
+    by accident; it was dead code that looked deliberate.
+
+    Only that contradiction is reported. A job that merely *should not* run
+    because a need was skipped is correct as written and is left alone.
+    """
+    jobs = _jobs(lines)
+    problems: list[str] = []
+    for job_id, job in jobs.items():
+        condition = job["if"] or ""
+        if any(token in condition for token in _OPTOUTS):
+            continue
+        for needed in job["needs"]:  # type: ignore[union-attr]
+            if not re.search(rf"needs\.{re.escape(needed)}\.result\s*==\s*'skipped'", condition):
+                continue
+            problems.append(
+                f"{path.name}: job '{job_id}' needs '{needed}' and asserts "
+                f"needs.{needed}.result == 'skipped', but without always() the job "
+                f"is skipped the moment '{needed}' is -- the condition can never "
+                f"hold and the job would never run"
+            )
+    return problems
+
+
 def analyse(directory: pathlib.Path) -> list[str]:
     workflows = sorted(directory.glob("*.yml")) + sorted(directory.glob("*.yaml"))
     parsed = {path: path.read_text(encoding="utf-8").splitlines() for path in workflows}
@@ -212,6 +261,9 @@ def analyse(directory: pathlib.Path) -> list[str]:
                     f"{path.name}: job '{job_id}' calls {callee_name} without "
                     f"{gap}; the run would die at startup"
                 )
+
+    for path, lines in parsed.items():
+        problems.extend(skipped_neighbour_gaps(path, lines))
     return problems
 
 
@@ -233,7 +285,7 @@ def main(argv: list[str] | None = None) -> int:
     for problem in problems:
         print(f"::error::{problem}")
     if not problems:
-        print("every reusable-workflow call grants what it requests")
+        print("every workflow job is reachable: permissions granted, no silent skips")
     return 1 if problems else 0
 
 

@@ -111,3 +111,81 @@ def test_checker_exits_non_zero_from_the_command_line(tmp_path: pathlib.Path) ->
     )
     assert completed.returncode == 1
     assert "missing workflow" in completed.stdout
+
+
+def _write_neighbour_workflow(directory: pathlib.Path, *, opt_in: bool) -> None:
+    """A gate, an explain-only-on-failure job, and a release that expects it skipped."""
+    directory.mkdir(parents=True, exist_ok=True)
+    opt = "always() && " if opt_in else ""
+    (directory / "release.yml").write_text(
+        "on: push\npermissions:\n  contents: read\n"
+        "jobs:\n"
+        "  gate:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n      - run: echo gate\n"
+        "  explain-blocked:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    needs: [gate]\n"
+        "    if: always() && needs.gate.result != 'success'\n"
+        "    steps:\n      - run: echo blocked\n"
+        "  release:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    needs: [gate, explain-blocked]\n"
+        f"    if: {opt}needs.gate.outputs.approved == 'true' "
+        "&& needs.explain-blocked.result == 'skipped'\n"
+        "    steps:\n      - run: echo release\n",
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.regression
+def test_checker_flags_a_condition_that_can_never_hold(tmp_path: pathlib.Path) -> None:
+    """The gate approved, the run went green, and no release was ever cut.
+
+    `explain-blocked` only runs when the gate refuses, so on success it is
+    skipped -- and `release` required exactly that. Without `always()` GitHub
+    skips `release` the moment `explain-blocked` is skipped, so the condition
+    could never be true. The repository shipped with zero releases and nothing
+    to indicate why.
+    """
+    workflows = tmp_path / ".github" / "workflows"
+    _write_neighbour_workflow(workflows, opt_in=False)
+
+    problems = _load_checker().analyse(workflows)
+    assert len(problems) == 1, problems
+    assert "'release'" in problems[0] and "explain-blocked" in problems[0]
+
+
+@pytest.mark.regression
+def test_checker_accepts_an_opted_in_condition(tmp_path: pathlib.Path) -> None:
+    workflows = tmp_path / ".github" / "workflows"
+    _write_neighbour_workflow(workflows, opt_in=True)
+
+    assert _load_checker().analyse(workflows) == []
+
+
+@pytest.mark.regression
+def test_checker_leaves_ordinary_conditional_dependencies_alone(tmp_path: pathlib.Path) -> None:
+    """A job that should not run because a need was skipped is correct as written.
+
+    Only a condition that asserts a need *was* skipped is a contradiction; the
+    publish jobs gate on `result == 'success'` and must stay untouched.
+    """
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "publish.yml").write_text(
+        "on: push\npermissions:\n  contents: read\n"
+        "jobs:\n"
+        "  release:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    if: startsWith(github.ref, 'refs/tags/v')\n"
+        "    steps:\n      - run: echo release\n"
+        "  publish:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    needs: [release]\n"
+        "    if: needs.release.result == 'success'\n"
+        "    steps:\n      - run: echo publish\n",
+        encoding="utf-8",
+    )
+
+    assert _load_checker().analyse(workflows) == []

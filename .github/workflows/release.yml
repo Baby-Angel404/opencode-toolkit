@@ -140,7 +140,12 @@ jobs:
     name: GitHub release
     needs: [validate, explain-blocked]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') && needs.validate.outputs.approved == 'true' && needs.explain-blocked.result == 'skipped'
+    # `always()` is load-bearing, not decoration. `explain-blocked` is skipped on
+    # exactly the happy path -- it only runs when the gate refused -- and GitHub
+    # skips every job that needs a skipped job unless its own condition opts in.
+    # Without this the gate approved, the run went green, and no release was ever
+    # cut: 0 releases, nothing to notice.
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.validate.outputs.approved == 'true' && needs.explain-blocked.result == 'skipped'
     permissions:
       contents: write
     steps:

@@ -1,0 +1,8 @@
+{
+  "id": "fix-release-job-never-ran",
+  "type": "fixed",
+  "area": "ci",
+  "description": "The release job required needs.explain-blocked.result == 'skipped', but GitHub skips a dependent job whenever a job it needs is skipped unless the condition uses always(). Since explain-blocked only runs when the gate refuses, the condition could never hold and no release was ever cut, while the run stayed green. The condition now opts in, and the workflow checker reports the contradiction before it can ship.",
+  "breaking": false,
+  "issue": ""
+}
