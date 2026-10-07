@@ -167,6 +167,34 @@ jobs:
       # approved.
       - run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt && python -m pip install -e .
 
+      # The gate lives in .opencode/toolkit/release-gate.json, which is
+      # gitignored on purpose: it records a verdict about *this* commit, not a
+      # fact about the repository. So a fresh checkout has none, and
+      # `release preflight` refuses to build without one. The approved gate is
+      # instead handed over as an artefact from the validate job in this same
+      # run, and its recorded commit has to be this commit -- otherwise a
+      # leftover artefact from an earlier attempt could authorise a release it
+      # never looked at.
+      - name: Restore the approved gate from this run
+        uses: actions/download-artifact@v8
+        with:
+          name: release-gate
+          path: gate-evidence
+
+      - name: Install the gate where preflight expects it
+        run: |
+          set -euo pipefail
+          test -f gate-evidence/gate.json
+          mkdir -p .opencode/toolkit
+          cp gate-evidence/gate.json .opencode/toolkit/release-gate.json
+          recorded="$(python -c "import json,sys; print(json.load(open('.opencode/toolkit/release-gate.json'))['commit'])")"
+          echo "gate describes : ${recorded}"
+          echo "this commit    : ${GITHUB_SHA}"
+          if [[ "${recorded}" != "${GITHUB_SHA}" ]]; then
+            echo "::error::the approved gate describes ${recorded}, not ${GITHUB_SHA}"
+            exit 1
+          fi
+
       - name: Refuse to proceed on a blocked gate
         run: |
           if [[ "${{ needs.validate.outputs.approved }}" != "true" ]]; then
