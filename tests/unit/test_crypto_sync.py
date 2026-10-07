@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from pathlib import Path
 
 import pytest
@@ -373,6 +374,7 @@ def test_delete_removes_the_snapshot_and_its_index_entry(
     assert store.list_snapshots() == []
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits")
 def test_snapshot_document_state_is_owner_only(store: SnapshotStore, workspace: Path) -> None:
     import stat
 

@@ -70,6 +70,15 @@ correlation without disclosure.
 **How.** Secret-bearing files are written `0600` and the directories holding them
 `0700`, so another local user cannot read them or even list what is there.
 
+**Platform note.** That guarantee is POSIX. On Windows `os.chmod` only toggles the
+read-only flag, so `stat.S_IMODE` reports `0o666` for any writable file and an
+owner-only mode cannot be expressed at all. The toolkit still requests `0600`
+wherever it can, and `opencode doctor` reports the platform's fsync and
+permission semantics rather than assuming them. Confidentiality on Windows rests
+on ACLs, so a deployment there should set them on the state directory; the tests
+that assert the owner-only mode skip themselves on `nt` instead of pretending the
+bit is present.
+
 `core.redact` is the only sanctioned path from a possibly-sensitive value
 to something printable. The scanner stores the fingerprint at detection time and
 discards the value before constructing a finding. DSN and URL credentials are

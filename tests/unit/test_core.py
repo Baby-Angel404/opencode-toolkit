@@ -242,6 +242,7 @@ def test_atomic_write_replaces_only_on_success(tmp_path: Path) -> None:
     assert not list(tmp_path.glob(".state.json.*"))
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits")
 def test_atomic_write_sets_mode(tmp_path: Path) -> None:
     target = tmp_path / "secret.txt"
     write_bytes_atomic(target, b"x", mode=0o600)

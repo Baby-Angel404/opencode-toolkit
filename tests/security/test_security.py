@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 import stat
 from pathlib import Path
@@ -196,6 +197,7 @@ def test_no_key_material_is_ever_written_to_disk(tmp_path: Path, workspace: Path
         assert b"sensitive content" not in data, path
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits")
 def test_snapshot_state_is_owner_only(tmp_path: Path, workspace: Path) -> None:
     (workspace / "docs").mkdir()
     (workspace / "docs" / "a.md").write_text("x", encoding="utf-8")
@@ -206,6 +208,7 @@ def test_snapshot_state_is_owner_only(tmp_path: Path, workspace: Path) -> None:
             assert stat.S_IMODE(path.stat().st_mode) == 0o600, path
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits")
 def test_queue_state_is_owner_only(tmp_path: Path) -> None:
     queue = OfflineQueue(tmp_path / "queue")
     queue.enqueue("push", "t1")
